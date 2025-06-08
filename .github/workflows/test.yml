@@ -1,0 +1,22 @@
+name: Run Tests Before Merge
+on: [pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    - name: Install dependencies
+      run: |
+        cd backend && npm install
+        cd frontend && npm install
+    - name: Run backend tests
+      run: cd backend && npm test
+    - name: Run frontend tests
+      run: cd frontend && npm test
+    - name: Verify Cypress E2E tests
+      run: cd frontend && npm run test:e2e
