@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  db:
+    image: supabase/postgres:15.1.0.147
+    container_name: restaurant_supabase_db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_super_secret_password
+      POSTGRES_PORT: 5432
+    ports:
+      - "54322:5432"
+    volumes:
+      - restaurant_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  postgrest:
+    image: postgrest/postgrest:v12.0.1
+    container_name: restaurant_postgrest
+    environment:
+      PGRST_DB_URI: postgres://postgres:your_super_secret_password@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: your-jwt-secret-key-make-this-long-and-random
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  restaurant_db_data:
