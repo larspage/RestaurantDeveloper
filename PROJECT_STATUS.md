@@ -1,6 +1,6 @@
 # Project Status - RestaurantDeveloper
 
-## 📊 Overall Progress: **60% Complete**
+## 📊 Overall Progress: **80% Complete**
 *Last Updated: June 2025*
 
 ## ✅ **COMPLETED FEATURES**
@@ -31,21 +31,21 @@
 - ✅ **Active Context** - Development roadmap and feature phases
 - ✅ **Status Tracking** - Updated with current progress
 
-### **Backend API Endpoints (75% Complete)**
+### **Backend API Endpoints (95% Complete)**
 - ✅ **Restaurant Management** - **FULLY TESTED & WORKING**
   - `GET /restaurants` - List all restaurants
   - `GET /restaurants/:id` - Retrieve restaurant data
   - `POST /restaurants` - Create new restaurant (owner only)
   - `PATCH /restaurants/:id` - Update restaurant settings (owner only)
   - `DELETE /restaurants/:id` - Delete restaurant (owner only)
-- ⚠️ **Menu Management** - **IMPLEMENTED BUT TESTS NEED FIXING**
+- ✅ **Menu Management** - **FULLY TESTED & WORKING**
   - `GET /menus/:restaurant_id` - Get restaurant menu
   - `POST /menus/:restaurant_id` - Update menu items
   - `POST /menus/:restaurant_id/sections` - Manage menu sections
   - `DELETE /menus/:restaurant_id/sections/:section_id` - Delete menu section
   - `POST /menus/:restaurant_id/sections/:section_id/items` - Manage menu items
   - `DELETE /menus/:restaurant_id/sections/:section_id/items/:item_id` - Delete menu item
-- ⚠️ **Order Processing** - **IMPLEMENTED BUT TESTS NEED FIXING**
+- ✅ **Order Processing** - **FULLY TESTED & WORKING**
   - `POST /orders/new` - Place new order (guest & authenticated)
   - `GET /orders/history` - Order history for customers
   - `GET /orders/:id` - Get order details
@@ -75,11 +75,11 @@
 - ❌ **Theme Seeding** - Default themes populated
 - ❌ **Sample Data** - Test restaurants and menus
 
-### **Testing & Quality (70% Complete)**
+### **Testing & Quality (90% Complete)**
 - ✅ **Auth Tests** - Complete test suite (8/8 passing)
 - ✅ **Restaurant API Tests** - Complete test suite (9/9 passing)
-- ⚠️ **Menu API Tests** - Test suite needs fixing (0/12 passing)
-- ⚠️ **Order API Tests** - Test suite needs fixing (0/14 passing)
+- ✅ **Menu API Tests** - Complete test suite (12/12 passing)
+- ✅ **Order API Tests** - Complete test suite (14/14 passing)
 - ✅ **Test Infrastructure** - Jest setup with proper mocking
 - ✅ **Authentication Mocking** - Supabase/JWT mocking working
 - ❌ **Frontend E2E Tests** - Cypress user workflow tests
@@ -97,8 +97,8 @@
 
 ### **Priority 1: Complete Backend Testing**
 1. ✅ **Restaurant Management Tests** - All tests passing with proper authentication
-2. **Menu Management Tests** - Fix test setup to match restaurant pattern
-3. **Order Processing Tests** - Fix test setup to match restaurant pattern
+2. ✅ **Menu Management Tests** - Fixed test setup with proper patterns
+3. ✅ **Order Processing Tests** - Fixed test setup with proper patterns
 4. **Theme Management Endpoints** - Implement theme system and seeding
 
 ### **Priority 2: Frontend Foundation**
@@ -119,16 +119,20 @@
 |-------|---------|--------|------------|
 | **Foundation** | Backend Models & Auth | ✅ Complete | 100% |
 | **Phase 1** | Restaurant Management API | ✅ Complete | 100% |
-| **Phase 2** | Menu Management API | ⚠️ Needs Test Fixes | 85% |
-| **Phase 3** | Order Processing API | ⚠️ Needs Test Fixes | 85% |
+| **Phase 2** | Menu Management API | ✅ Complete | 100% |
+| **Phase 3** | Order Processing API | ✅ Complete | 100% |
 | **Phase 4** | Frontend Foundation | ❌ Not Started | 0% |
 | **Phase 5** | Theme System | ❌ Not Started | 0% |
 | **Phase 6** | Customer Ordering UI | ❌ Not Started | 0% |
-| **Phase 7** | Testing & Deployment | 🔄 In Progress | 70% |
+| **Phase 7** | Testing & Deployment | 🔄 In Progress | 90% |
 
 ---
 
 ## 🔥 **RECENT ACCOMPLISHMENTS**
+- **June 2025**: Fixed Menu API tests (12/12 passing) with proper model relationships
+- **June 2025**: Fixed Order API tests (14/14 passing) with optional authentication
+- **June 2025**: Implemented optional authentication middleware for mixed auth/guest routes
+- **June 2025**: Updated database models to use ObjectId references for better relationships
 - **June 2025**: Fixed authentication system and test mocking framework
 - **June 2025**: Improved HTTP status codes for better error handling (401/422 vs 404)
 - **June 2025**: Restaurant API fully tested and working (9/9 tests passing)
@@ -151,6 +155,12 @@
 - **Implementation**: Mock JWT tokens with user-specific identifiers
 - **Pattern**: Create fresh users in `beforeEach` instead of `beforeAll` to avoid database cleanup issues
 
+### **Optional Authentication**
+- **Decision**: Created optional authentication middleware for mixed auth/guest routes
+- **Rationale**: Some routes like order creation need to support both authenticated users and guests
+- **Implementation**: Middleware that sets req.user if token is provided but doesn't fail if no token
+- **Impact**: Simplified route handlers and improved code consistency
+
 ### **HTTP Status Codes**
 - **Decision**: Use appropriate HTTP status codes for different error types
 - **401 Unauthorized**: Missing/invalid tokens, user not found
@@ -159,15 +169,19 @@
 - **404 Not Found**: Resource doesn't exist (not auth issues)
 
 ### **Database Models**
-- **Decision**: Updated Restaurant model to use `owner` field (ObjectId) instead of `owner_id` (String)
-- **Rationale**: Better MongoDB relationships and consistency with other models
-- **Impact**: Required updates to routes and tests
+- **Decision**: Updated all models to use ObjectId references instead of string IDs
+- **Rationale**: Better MongoDB relationships and consistency across models
+- **Implementation**: 
+  - Restaurant model: `owner` (ObjectId) instead of `owner_id` (String)
+  - Menu model: `restaurant` (ObjectId) instead of `restaurant_id` (String)
+  - Order model: `restaurant` and `customer` (ObjectIds) instead of string IDs
+- **Impact**: Improved database relationships and query performance
 
 ---
 
 ## 📝 **NOTES**
 - **Architecture Decision**: Hybrid Supabase/MongoDB approach working well
 - **Testing Strategy**: TDD approach established with Jest/Supertest and proper mocking
-- **Current Issue**: Menu and Order tests need same fix pattern as Restaurant tests
-- **Next Milestone**: Complete all backend API testing before frontend work
+- **Current Issue**: All backend API tests now passing! (43/43 tests)
+- **Next Milestone**: Implement Theme API or start frontend work
 - **Deployment Target**: DigitalOcean App Platform for both backend and frontend 
