@@ -49,8 +49,9 @@ const menuSectionSchema = new mongoose.Schema({
 }, { _id: true });
 
 const menuSchema = new mongoose.Schema({
-  restaurant_id: {
-    type: String, // UUID from Supabase
+  restaurant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant',
     required: true,
     unique: true
   },
@@ -60,6 +61,6 @@ const menuSchema = new mongoose.Schema({
 });
 
 // Index for efficient restaurant queries
-menuSchema.index({ restaurant_id: 1 });
+menuSchema.index({ restaurant: 1 });
 
 module.exports = mongoose.model('Menu', menuSchema); 

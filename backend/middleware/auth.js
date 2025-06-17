@@ -41,6 +41,46 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
+// Optional authentication middleware - sets req.user if token is provided, but doesn't fail if no token
+const optionalAuthenticateToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      // No token provided, continue without setting req.user
+      return next();
+    }
+
+    // Verify token with Supabase
+    const supabaseUser = await verifyToken(token);
+    
+    // Get user data from MongoDB (cached profile)
+    const mongoUser = await User.findOne({ supabase_id: supabaseUser.id });
+    
+    if (!mongoUser) {
+      // User not found but don't fail - continue without setting req.user
+      return next();
+    }
+
+    // Attach user info to request
+    req.user = {
+      id: mongoUser._id.toString(),
+      supabase_id: supabaseUser.id,
+      email: supabaseUser.email,
+      name: mongoUser.name,
+      role: mongoUser.role,
+      restaurant_id: mongoUser.restaurant_id
+    };
+
+    next();
+  } catch (error) {
+    console.error('Optional auth middleware error:', error);
+    // For optional auth, continue without setting req.user on error
+    next();
+  }
+};
+
 // Middleware to check if user is restaurant owner
 const requireOwner = (req, res, next) => {
   if (req.user.role !== 'restaurant_owner') {
@@ -61,6 +101,7 @@ const requireRestaurantOwner = (req, res, next) => {
 
 module.exports = {
   authenticateToken,
+  optionalAuthenticateToken,
   requireOwner,
   requireRestaurantOwner
 }; 

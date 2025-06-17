@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { Menu } = require('../models/Menu');
-const { Restaurant } = require('../models/Restaurant');
+const Menu = require('../models/Menu');
+const Restaurant = require('../models/Restaurant');
 const { authenticateToken } = require('../middleware/auth');
 
 // Get menu for a restaurant (public endpoint)
 router.get('/:restaurant_id', async (req, res) => {
   try {
-    const menu = await Menu.findOne({ restaurant_id: req.params.restaurant_id });
+    const menu = await Menu.findOne({ restaurant: req.params.restaurant_id });
     if (!menu) {
       return res.status(404).json({ message: 'Menu not found' });
     }
@@ -25,7 +25,7 @@ router.post('/:restaurant_id', authenticateToken, async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({ message: 'Restaurant not found' });
     }
-    if (restaurant.owner_id.toString() !== req.user.id) {
+    if (restaurant.owner.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Only the restaurant owner can modify the menu' });
     }
 
@@ -38,7 +38,7 @@ router.post('/:restaurant_id', authenticateToken, async (req, res) => {
 
     // Create or update menu
     const menu = await Menu.findOneAndUpdate(
-      { restaurant_id: req.params.restaurant_id },
+      { restaurant: req.params.restaurant_id },
       { sections },
       { new: true, upsert: true, runValidators: true }
     );
@@ -57,7 +57,7 @@ router.post('/:restaurant_id/sections', authenticateToken, async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({ message: 'Restaurant not found' });
     }
-    if (restaurant.owner_id.toString() !== req.user.id) {
+    if (restaurant.owner.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Only the restaurant owner can modify menu sections' });
     }
 
@@ -67,9 +67,9 @@ router.post('/:restaurant_id/sections', authenticateToken, async (req, res) => {
     }
 
     // Find existing menu or create new one
-    let menu = await Menu.findOne({ restaurant_id: req.params.restaurant_id });
+    let menu = await Menu.findOne({ restaurant: req.params.restaurant_id });
     if (!menu) {
-      menu = new Menu({ restaurant_id: req.params.restaurant_id, sections: [] });
+      menu = new Menu({ restaurant: req.params.restaurant_id, sections: [] });
     }
 
     // If section has _id, update existing section, otherwise add new section
@@ -98,11 +98,11 @@ router.delete('/:restaurant_id/sections/:section_id', authenticateToken, async (
     if (!restaurant) {
       return res.status(404).json({ message: 'Restaurant not found' });
     }
-    if (restaurant.owner_id.toString() !== req.user.id) {
+    if (restaurant.owner.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Only the restaurant owner can delete menu sections' });
     }
 
-    const menu = await Menu.findOne({ restaurant_id: req.params.restaurant_id });
+    const menu = await Menu.findOne({ restaurant: req.params.restaurant_id });
     if (!menu) {
       return res.status(404).json({ message: 'Menu not found' });
     }
@@ -127,7 +127,7 @@ router.post('/:restaurant_id/sections/:section_id/items', authenticateToken, asy
     if (!restaurant) {
       return res.status(404).json({ message: 'Restaurant not found' });
     }
-    if (restaurant.owner_id.toString() !== req.user.id) {
+    if (restaurant.owner.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Only the restaurant owner can modify menu items' });
     }
 
@@ -136,7 +136,7 @@ router.post('/:restaurant_id/sections/:section_id/items', authenticateToken, asy
       return res.status(400).json({ message: 'Item name and price are required' });
     }
 
-    const menu = await Menu.findOne({ restaurant_id: req.params.restaurant_id });
+    const menu = await Menu.findOne({ restaurant: req.params.restaurant_id });
     if (!menu) {
       return res.status(404).json({ message: 'Menu not found' });
     }
@@ -172,11 +172,11 @@ router.delete('/:restaurant_id/sections/:section_id/items/:item_id', authenticat
     if (!restaurant) {
       return res.status(404).json({ message: 'Restaurant not found' });
     }
-    if (restaurant.owner_id.toString() !== req.user.id) {
+    if (restaurant.owner.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Only the restaurant owner can delete menu items' });
     }
 
-    const menu = await Menu.findOne({ restaurant_id: req.params.restaurant_id });
+    const menu = await Menu.findOne({ restaurant: req.params.restaurant_id });
     if (!menu) {
       return res.status(404).json({ message: 'Menu not found' });
     }

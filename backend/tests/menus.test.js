@@ -3,66 +3,46 @@ const mongoose = require('mongoose');
 const app = require('../app');
 const Restaurant = require('../models/Restaurant');
 const Menu = require('../models/Menu');
-const Theme = require('../models/Theme');
 const { createTestUser, getAuthToken } = require('./testUtils');
 
 describe('Menu API Endpoints', () => {
   let ownerToken;
   let customerToken;
-  let testTheme;
   let testRestaurant;
   let testMenu;
-  let owner;
-  let customer;
+  let testOwner;
+  let testCustomer;
 
-  beforeAll(async () => {
-    // Create test users
-    owner = await createTestUser({
+  beforeEach(async () => {
+    // Create test users for each test
+    testOwner = await createTestUser({
       email: 'owner@test.com',
-      password: 'testpass123',
       name: 'Test Owner',
       role: 'owner'
     });
     
-    customer = await createTestUser({
+    testCustomer = await createTestUser({
       email: 'customer@test.com',
-      password: 'testpass123',
       name: 'Test Customer',
       role: 'customer'
     });
 
-    ownerToken = await getAuthToken(owner);
-    customerToken = await getAuthToken(customer);
+    ownerToken = await getAuthToken(testOwner);
+    customerToken = await getAuthToken(testCustomer);
 
-    // Create a test theme
-    testTheme = await Theme.create({
-      name: 'test-theme',
-      displayName: 'Test Theme',
-      colors: {
-        primary: '#000000',
-        secondary: '#ffffff',
-        accent: '#cccccc',
-        background: '#f5f5f5',
-        text: '#333333'
-      },
-      fonts: {
-        heading: 'Arial',
-        body: 'Helvetica'
-      }
-    });
-  });
-
-  beforeEach(async () => {
-    // Create a test restaurant and menu before each test
+    // Create a test restaurant for each test
     testRestaurant = await Restaurant.create({
       name: 'Test Restaurant for Menu',
       description: 'A test restaurant',
-      theme_id: testTheme._id,
-      owner_id: new mongoose.Types.ObjectId().toString()
+      location: 'Test Location',
+      cuisine: ['Test Cuisine'],
+      owner: testOwner._id,
+      status: 'active'
     });
 
+    // Create a test menu for each test
     testMenu = await Menu.create({
-      restaurant_id: testRestaurant.owner_id,
+      restaurant: testRestaurant._id,
       sections: [{
         name: 'Test Section',
         description: 'A test section',
@@ -77,22 +57,10 @@ describe('Menu API Endpoints', () => {
     });
   });
 
-  afterEach(async () => {
-    // Clean up menus after each test
-    await Menu.deleteMany({});
-  });
-
-  afterAll(async () => {
-    // Clean up restaurants and close connection
-    await Restaurant.deleteMany({});
-    await Theme.deleteMany({});
-    await mongoose.connection.close();
-  });
-
   describe('GET /menus/:restaurant_id', () => {
     it('should return restaurant menu', async () => {
       const res = await request(app)
-        .get(`/menus/${testRestaurant.owner_id}`)
+        .get(`/menus/${testRestaurant._id}`)
         .expect(200);
 
       expect(res.body.sections).toBeDefined();
@@ -101,7 +69,7 @@ describe('Menu API Endpoints', () => {
 
     it('should return 404 for non-existent restaurant menu', async () => {
       await request(app)
-        .get(`/menus/${new mongoose.Types.ObjectId().toString()}`)
+        .get(`/menus/${new mongoose.Types.ObjectId()}`)
         .expect(404);
     });
   });
@@ -122,7 +90,7 @@ describe('Menu API Endpoints', () => {
       };
 
       const res = await request(app)
-        .post(`/menus/${testRestaurant.owner_id}`)
+        .post(`/menus/${testRestaurant._id}`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send(newMenu)
         .expect(200);
@@ -140,7 +108,7 @@ describe('Menu API Endpoints', () => {
       };
 
       await request(app)
-        .post(`/menus/${testRestaurant.owner_id}`)
+        .post(`/menus/${testRestaurant._id}`)
         .set('Authorization', `Bearer ${customerToken}`)
         .send(newMenu)
         .expect(403);
@@ -158,7 +126,7 @@ describe('Menu API Endpoints', () => {
       };
 
       const res = await request(app)
-        .post(`/menus/${testRestaurant.owner_id}/sections`)
+        .post(`/menus/${testRestaurant._id}/sections`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send(newSection)
         .expect(200);
@@ -178,7 +146,7 @@ describe('Menu API Endpoints', () => {
       };
 
       const res = await request(app)
-        .post(`/menus/${testRestaurant.owner_id}/sections`)
+        .post(`/menus/${testRestaurant._id}/sections`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send(updatedSection)
         .expect(200);
@@ -193,7 +161,7 @@ describe('Menu API Endpoints', () => {
       const sectionId = testMenu.sections[0]._id;
 
       const res = await request(app)
-        .delete(`/menus/${testRestaurant.owner_id}/sections/${sectionId}`)
+        .delete(`/menus/${testRestaurant._id}/sections/${sectionId}`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .expect(200);
 
@@ -204,7 +172,7 @@ describe('Menu API Endpoints', () => {
       const sectionId = testMenu.sections[0]._id;
 
       await request(app)
-        .delete(`/menus/${testRestaurant.owner_id}/sections/${sectionId}`)
+        .delete(`/menus/${testRestaurant._id}/sections/${sectionId}`)
         .set('Authorization', `Bearer ${customerToken}`)
         .expect(403);
     });
@@ -223,7 +191,7 @@ describe('Menu API Endpoints', () => {
       };
 
       const res = await request(app)
-        .post(`/menus/${testRestaurant.owner_id}/sections/${sectionId}/items`)
+        .post(`/menus/${testRestaurant._id}/sections/${sectionId}/items`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send(newItem)
         .expect(200);
@@ -244,7 +212,7 @@ describe('Menu API Endpoints', () => {
       };
 
       const res = await request(app)
-        .post(`/menus/${testRestaurant.owner_id}/sections/${sectionId}/items`)
+        .post(`/menus/${testRestaurant._id}/sections/${sectionId}/items`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .send(updatedItem)
         .expect(200);
@@ -260,7 +228,7 @@ describe('Menu API Endpoints', () => {
       const itemId = testMenu.sections[0].items[0]._id;
 
       const res = await request(app)
-        .delete(`/menus/${testRestaurant.owner_id}/sections/${sectionId}/items/${itemId}`)
+        .delete(`/menus/${testRestaurant._id}/sections/${sectionId}/items/${itemId}`)
         .set('Authorization', `Bearer ${ownerToken}`)
         .expect(200);
 
@@ -272,7 +240,7 @@ describe('Menu API Endpoints', () => {
       const itemId = testMenu.sections[0].items[0]._id;
 
       await request(app)
-        .delete(`/menus/${testRestaurant.owner_id}/sections/${sectionId}/items/${itemId}`)
+        .delete(`/menus/${testRestaurant._id}/sections/${sectionId}/items/${itemId}`)
         .set('Authorization', `Bearer ${customerToken}`)
         .expect(403);
     });

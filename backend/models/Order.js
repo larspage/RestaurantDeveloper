@@ -24,13 +24,15 @@ const orderItemSchema = new mongoose.Schema({
 }, { _id: true });
 
 const orderSchema = new mongoose.Schema({
-  restaurant_id: {
-    type: String, // UUID from Supabase
+  restaurant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant',
     required: true
   },
-  customer_id: {
-    type: String, // UUID from Supabase, null for guest orders
-    default: null
+  customer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null // null for guest orders
   },
   items: [orderItemSchema],
   total_price: {
@@ -44,7 +46,7 @@ const orderSchema = new mongoose.Schema({
     enum: ['received', 'confirmed', 'in_kitchen', 'ready_for_pickup', 'delivered', 'cancelled'],
     default: 'received'
   },
-  // Guest order contact info (when customer_id is null)
+  // Guest order contact info (when customer is null)
   guest_info: {
     name: { type: String, trim: true },
     phone: { type: String, trim: true },
@@ -63,8 +65,8 @@ const orderSchema = new mongoose.Schema({
 });
 
 // Indexes for efficient queries
-orderSchema.index({ restaurant_id: 1, createdAt: -1 });
-orderSchema.index({ customer_id: 1, createdAt: -1 });
+orderSchema.index({ restaurant: 1, createdAt: -1 });
+orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Order', orderSchema); 

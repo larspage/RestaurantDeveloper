@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { Order } = require('../models/Order');
-const { Restaurant } = require('../models/Restaurant');
-const { authenticateToken } = require('../middleware/auth');
+const Order = require('../models/Order');
+const Restaurant = require('../models/Restaurant');
+const { authenticateToken, optionalAuthenticateToken } = require('../middleware/auth');
 
 // Place a new order (public endpoint - supports both guest and authenticated users)
-router.post('/new', async (req, res) => {
+router.post('/new', optionalAuthenticateToken, async (req, res) => {
   try {
     const { restaurant_id, items, guest_info, notes } = req.body;
 
@@ -20,7 +20,7 @@ router.post('/new', async (req, res) => {
 
     // Create order object
     const orderData = {
-      restaurant_id,
+      restaurant: restaurant_id,
       items,
       total_price,
       notes,
@@ -29,7 +29,7 @@ router.post('/new', async (req, res) => {
 
     // Add customer info based on authentication status
     if (req.user) {
-      orderData.customer_id = req.user.id;
+      orderData.customer = req.user.id;
     } else if (guest_info) {
       orderData.guest_info = guest_info;
     } else {
@@ -46,7 +46,7 @@ router.post('/new', async (req, res) => {
 // Get order history for a customer (authenticated users only)
 router.get('/history', authenticateToken, async (req, res) => {
   try {
-    const orders = await Order.find({ customer_id: req.user.id })
+    const orders = await Order.find({ customer: req.user.id })
       .sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
@@ -55,7 +55,7 @@ router.get('/history', authenticateToken, async (req, res) => {
 });
 
 // Get single order by ID (authenticated users or matching guest info)
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuthenticateToken, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) {
@@ -65,8 +65,8 @@ router.get('/:id', async (req, res) => {
     // Check authorization
     if (req.user) {
       // Authenticated user must be the customer or restaurant owner
-      const restaurant = await Restaurant.findById(order.restaurant_id);
-      if (order.customer_id !== req.user.id && restaurant.owner_id.toString() !== req.user.id) {
+      const restaurant = await Restaurant.findById(order.restaurant);
+      if (order.customer && order.customer.toString() !== req.user.id && restaurant.owner.toString() !== req.user.id) {
         return res.status(403).json({ message: 'Not authorized to view this order' });
       }
     } else {
@@ -94,14 +94,14 @@ router.post('/reorder/:id', authenticateToken, async (req, res) => {
     }
 
     // Verify ownership of previous order
-    if (previousOrder.customer_id !== req.user.id) {
+    if (previousOrder.customer && previousOrder.customer.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to reorder this order' });
     }
 
     // Create new order with same items
     const newOrder = new Order({
-      restaurant_id: previousOrder.restaurant_id,
-      customer_id: req.user.id,
+      restaurant: previousOrder.restaurant,
+      customer: req.user.id,
       items: previousOrder.items,
       total_price: previousOrder.total_price,
       status: 'received'
@@ -122,13 +122,13 @@ router.get('/restaurant/:restaurant_id/active', authenticateToken, async (req, r
     if (!restaurant) {
       return res.status(404).json({ message: 'Restaurant not found' });
     }
-    if (restaurant.owner_id.toString() !== req.user.id) {
+    if (restaurant.owner.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to view these orders' });
     }
 
     // Get active orders (all except delivered and cancelled)
     const orders = await Order.find({
-      restaurant_id: req.params.restaurant_id,
+      restaurant: req.params.restaurant_id,
       status: { $nin: ['delivered', 'cancelled'] }
     }).sort({ createdAt: 1 });
 
@@ -149,11 +149,11 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
     }
 
     // Verify restaurant ownership
-    const restaurant = await Restaurant.findById(order.restaurant_id);
+    const restaurant = await Restaurant.findById(order.restaurant);
     if (!restaurant) {
       return res.status(404).json({ message: 'Restaurant not found' });
     }
-    if (restaurant.owner_id.toString() !== req.user.id) {
+    if (restaurant.owner.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to update this order' });
     }
 
@@ -177,7 +177,7 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
 });
 
 // Cancel order (authenticated user or matching guest info)
-router.post('/:id/cancel', async (req, res) => {
+router.post('/:id/cancel', optionalAuthenticateToken, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) {
@@ -192,7 +192,7 @@ router.post('/:id/cancel', async (req, res) => {
     // Verify authorization
     if (req.user) {
       // Authenticated user must be the customer
-      if (order.customer_id !== req.user.id) {
+      if (order.customer && order.customer.toString() !== req.user.id) {
         return res.status(403).json({ message: 'Not authorized to cancel this order' });
       }
     } else {

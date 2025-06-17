@@ -4,67 +4,47 @@ const app = require('../app');
 const Restaurant = require('../models/Restaurant');
 const Menu = require('../models/Menu');
 const Order = require('../models/Order');
-const Theme = require('../models/Theme');
 const { createTestUser, getAuthToken } = require('./testUtils');
 
 describe('Order API Endpoints', () => {
   let ownerToken;
   let customerToken;
-  let testTheme;
   let testRestaurant;
   let testMenu;
   let testOrder;
-  let owner;
-  let customer;
+  let testOwner;
+  let testCustomer;
 
-  beforeAll(async () => {
-    // Create test users
-    owner = await createTestUser({
+  beforeEach(async () => {
+    // Create test users for each test
+    testOwner = await createTestUser({
       email: 'owner@test.com',
-      password: 'testpass123',
       name: 'Test Owner',
       role: 'owner'
     });
     
-    customer = await createTestUser({
+    testCustomer = await createTestUser({
       email: 'customer@test.com',
-      password: 'testpass123',
       name: 'Test Customer',
       role: 'customer'
     });
 
-    ownerToken = await getAuthToken(owner);
-    customerToken = await getAuthToken(customer);
+    ownerToken = await getAuthToken(testOwner);
+    customerToken = await getAuthToken(testCustomer);
 
-    // Create a test theme
-    testTheme = await Theme.create({
-      name: 'test-theme',
-      displayName: 'Test Theme',
-      colors: {
-        primary: '#000000',
-        secondary: '#ffffff',
-        accent: '#cccccc',
-        background: '#f5f5f5',
-        text: '#333333'
-      },
-      fonts: {
-        heading: 'Arial',
-        body: 'Helvetica'
-      }
-    });
-  });
-
-  beforeEach(async () => {
-    // Create a test restaurant and menu before each test
+    // Create a test restaurant for each test
     testRestaurant = await Restaurant.create({
       name: 'Test Restaurant for Orders',
       description: 'A test restaurant',
-      theme_id: testTheme._id,
-      owner_id: new mongoose.Types.ObjectId().toString()
+      location: 'Test Location',
+      cuisine: ['Test Cuisine'],
+      owner: testOwner._id,
+      status: 'active'
     });
 
+    // Create a test menu for each test
     testMenu = await Menu.create({
-      restaurant_id: testRestaurant.owner_id,
+      restaurant: testRestaurant._id,
       sections: [{
         name: 'Test Section',
         description: 'A test section',
@@ -78,9 +58,10 @@ describe('Order API Endpoints', () => {
       }]
     });
 
+    // Create a test order for each test
     testOrder = await Order.create({
-      restaurant_id: testRestaurant.owner_id,
-      customer_id: customer.supabase_id,
+      restaurant: testRestaurant._id,
+      customer: testCustomer._id,
       items: [{
         name: 'Test Item',
         price: 9.99,
@@ -89,19 +70,6 @@ describe('Order API Endpoints', () => {
       total_price: 19.98,
       status: 'received'
     });
-  });
-
-  afterEach(async () => {
-    // Clean up orders after each test
-    await Order.deleteMany({});
-  });
-
-  afterAll(async () => {
-    // Clean up restaurants and close connection
-    await Restaurant.deleteMany({});
-    await Menu.deleteMany({});
-    await Theme.deleteMany({});
-    await mongoose.connection.close();
   });
 
   describe('POST /orders/new', () => {
@@ -172,8 +140,8 @@ describe('Order API Endpoints', () => {
   describe('GET /orders/:id', () => {
     it('should return order details for authenticated customer', async () => {
       const order = await Order.create({
-        restaurant_id: testRestaurant._id,
-        customer_id: 'test-customer-id',
+        restaurant: testRestaurant._id,
+        customer: testCustomer._id,
         items: [{ name: 'Test Item', price: 9.99, quantity: 1 }],
         total_price: 9.99,
         status: 'received'
@@ -189,7 +157,7 @@ describe('Order API Endpoints', () => {
 
     it('should return order details for guest with correct info', async () => {
       const order = await Order.create({
-        restaurant_id: testRestaurant._id,
+        restaurant: testRestaurant._id,
         items: [{ name: 'Guest Item', price: 9.99, quantity: 1 }],
         total_price: 9.99,
         status: 'received',
@@ -272,8 +240,8 @@ describe('Order API Endpoints', () => {
   describe('POST /orders/:id/cancel', () => {
     it('should allow customer to cancel their order', async () => {
       const order = await Order.create({
-        restaurant_id: testRestaurant._id,
-        customer_id: 'test-customer-id',
+        restaurant: testRestaurant._id,
+        customer: testCustomer._id,
         items: [{ name: 'Test Item', price: 9.99, quantity: 1 }],
         total_price: 9.99,
         status: 'received'
@@ -289,7 +257,7 @@ describe('Order API Endpoints', () => {
 
     it('should allow guest to cancel their order with correct info', async () => {
       const order = await Order.create({
-        restaurant_id: testRestaurant._id,
+        restaurant: testRestaurant._id,
         items: [{ name: 'Guest Item', price: 9.99, quantity: 1 }],
         total_price: 9.99,
         status: 'received',
@@ -312,8 +280,8 @@ describe('Order API Endpoints', () => {
 
     it('should not allow cancellation of orders in progress', async () => {
       const order = await Order.create({
-        restaurant_id: testRestaurant._id,
-        customer_id: 'test-customer-id',
+        restaurant: testRestaurant._id,
+        customer: testCustomer._id,
         items: [{ name: 'Test Item', price: 9.99, quantity: 1 }],
         total_price: 9.99,
         status: 'in_kitchen'
