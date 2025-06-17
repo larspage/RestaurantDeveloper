@@ -2,10 +2,10 @@
   "name": "restaurant-developer-backend",
   "version": "1.0.0",
   "description": "Backend API for Restaurant Developer Platform",
-  "main": "src/index.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
+    "start": "node app.js",
+    "dev": "nodemon app.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src/",
@@ -20,7 +20,8 @@
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "@supabase/supabase-js": "^2.38.0"
   },
   "devDependencies": {
     "jest": "^29.6.4",

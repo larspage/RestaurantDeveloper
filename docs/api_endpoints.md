@@ -3,6 +3,16 @@
 ## Overview  
 This document defines the REST API structure for Mr. Brooks Restaurant Creator, ensuring seamless data flow between **Supabase (authentication)** and **MongoDB (restaurant data, orders, customer history)**.
 
+*Updated: December 2024 - Reflects implemented authentication system and architectural decisions*
+
+## 🎯 **IMPLEMENTATION STATUS**
+✅ **Authentication Endpoints** - Fully implemented with tests  
+❌ **Restaurant Endpoints** - Not yet implemented  
+❌ **Menu Endpoints** - Not yet implemented  
+❌ **Order Endpoints** - Not yet implemented  
+
+*See [PROJECT_STATUS.md](PROJECT_STATUS.md) for detailed progress*
+
 ---
 
 ## Core API Principles  
@@ -13,33 +23,56 @@ This document defines the REST API structure for Mr. Brooks Restaurant Creator, 
 
 ---
 
-## Authentication Endpoints (`/auth`)
+## Authentication Endpoints (`/auth`) - ✅ **IMPLEMENTED**
 ### **1. User Signup**
 **POST** `/auth/signup`  
-Registers a new user via Supabase.
+Registers a new user via Supabase and creates MongoDB profile.
+
+**Request Body:**
 ```json
 {
   "email": "user@example.com",
   "password": "securepassword",
+  "name": "John Doe",
   "role": "customer",
-  "restaurant_id": "UUID"
+  "restaurant_id": "UUID" // optional, for restaurant owners
 }
 
+**Response:**
+```json
 {
   "message": "User created successfully",
-  "user_id": "UUID"
+  "user_id": "UUID",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "role": "customer"
 }
+```
 
+### **2. User Login**
+**POST** `/auth/login`  
+Authenticates user and returns JWT token.
+
+**Request Body:**
+```json
 {
   "email": "user@example.com",
   "password": "securepassword"
 }
+```
 
+**Response:**
+```json
 {
   "message": "Login successful",
   "token": "JWT-TOKEN",
-  "user_id": "UUID",
-  "restaurant_id": "UUID"
+  "user": {
+    "user_id": "UUID",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "role": "customer",
+    "restaurant_id": "UUID"
+  }
 }
 
 
