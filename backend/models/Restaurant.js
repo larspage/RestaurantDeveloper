@@ -6,22 +6,47 @@ const restaurantSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  owner_id: {
-    type: String, // UUID from Supabase
-    required: true
+  description: {
+    type: String,
+    trim: true
   },
-  theme_id: {
+  location: {
+    type: String,
+    trim: true
+  },
+  cuisine: [{
+    type: String,
+    trim: true
+  }],
+  owner: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Theme',
+    ref: 'User',
     required: true
   },
-  // TODO: Add additional restaurant metadata fields
-  // - address, phone, description, hours, etc.
+  theme: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Theme'
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'pending'],
+    default: 'active'
+  },
+  contact_info: {
+    email: String,
+    phone: String,
+    website: String
+  },
+  business_hours: {
+    type: Map,
+    of: String
+  }
 }, {
   timestamps: true
 });
 
 // Index for efficient queries
-restaurantSchema.index({ owner_id: 1 });
+restaurantSchema.index({ owner: 1 });
+restaurantSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Restaurant', restaurantSchema); 

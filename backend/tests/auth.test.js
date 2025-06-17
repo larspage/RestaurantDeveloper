@@ -1,7 +1,11 @@
 const request = require('supertest');
-const mongoose = require('mongoose');
 const app = require('../app');
 const { User } = require('../models');
+const { setupTestDB, clearTestDB, closeTestDB } = require('./testUtils');
+
+// Set test environment
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'test-secret-key';
 
 // Mock Supabase for testing
 jest.mock('../db/supabase', () => ({
@@ -21,20 +25,15 @@ const { supabase, verifyToken } = require('../db/supabase');
 
 describe('Authentication Endpoints', () => {
   beforeAll(async () => {
-    // Connect to test database
-    const mongoUri = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/test_restaurant_db';
-    await mongoose.connect(mongoUri);
+    await setupTestDB();
   });
 
   afterAll(async () => {
-    // Clean up and close database connection
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
+    await closeTestDB();
   });
 
   beforeEach(async () => {
-    // Clear all users before each test
-    await User.deleteMany({});
+    await clearTestDB();
     jest.clearAllMocks();
   });
 

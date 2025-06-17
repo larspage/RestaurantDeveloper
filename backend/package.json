@@ -6,8 +6,9 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "jest --detectOpenHandles --forceExit --runInBand --verbose",
+    "test:watch": "jest --watch --runInBand",
+    "test:coverage": "jest --coverage --detectOpenHandles --forceExit --runInBand",
     "lint": "eslint src/",
     "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx}'"
   },
@@ -32,5 +33,19 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "setupFilesAfterEnv": ["./tests/jest.setup.js"],
+    "testTimeout": 10000,
+    "verbose": true,
+    "clearMocks": true,
+    "restoreMocks": true,
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ]
   }
 } 

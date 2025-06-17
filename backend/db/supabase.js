@@ -1,9 +1,12 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Supabase configuration
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // For server-side operations
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY; // For client-side operations
+// Load environment variables
+require('dotenv').config();
+
+// Get Supabase configuration
+const supabaseUrl = process.env.NODE_ENV === 'test' ? 'http://localhost:54321' : process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.NODE_ENV === 'test' ? 'test-service-key' : process.env.SUPABASE_SERVICE_KEY;
+const supabaseAnonKey = process.env.NODE_ENV === 'test' ? 'test-anon-key' : process.env.SUPABASE_ANON_KEY;
 
 // Create Supabase client for server-side operations (admin access)
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -13,13 +16,13 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   }
 });
 
-// Create Supabase client for regular operations
+// Create Supabase client for client-side operations (anonymous access)
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Helper function to verify JWT token
+// Verify JWT token
 const verifyToken = async (token) => {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
     if (error) throw error;
     return user;
   } catch (error) {
@@ -27,19 +30,19 @@ const verifyToken = async (token) => {
   }
 };
 
-// Helper function to get user profile from Supabase
+// Get user profile from Supabase
 const getUserProfile = async (userId) => {
   try {
     const { data, error } = await supabaseAdmin
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
-    
+
     if (error) throw error;
     return data;
   } catch (error) {
-    throw new Error('User not found');
+    throw new Error('Error fetching user profile');
   }
 };
 
