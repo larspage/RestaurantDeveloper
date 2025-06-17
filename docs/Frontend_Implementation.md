@@ -36,6 +36,15 @@ This document defines the **frontend architecture, API interactions, and UI/UX c
 2. **Backend queries MongoDB** and returns menu data.  
 3. **Next.js dynamically renders menu options** in a structured format.  
 
+### **4a. Menu Management & JSON Import**
+1. **Restaurant owners access menu builder** via the dashboard.
+2. **Menu sections and items managed** through intuitive UI.
+3. **JSON import/export functionality** allows:
+   - **AI-generated menu content** from external sources
+   - **Standardized JSON format** for easy integration
+   - **Client-side validation** ensures data integrity
+   - **Bulk menu creation** reduces manual data entry
+
 ### **5. Ordering Flow**
 1. **Customer selects menu items** and customizes them.  
 2. **Order request sent via API (`POST /orders/new`)**  
@@ -77,11 +86,12 @@ This document defines the **frontend architecture, API interactions, and UI/UX c
 ✅ **AI-Based Menu Personalization** 🎯  
 ✅ **Multi-Restaurant Theme Customization** 🔧  
 ✅ **Seamless Payment Gateway Integration** 💳  
+✅ **Enhanced AI Menu Generation Integration** 🤖
 
 ---
 
 ### **Final Notes**
 This **frontend strategy ensures dynamic rendering, secure interactions, and optimized ordering flows**, keeping restaurant websites **fast, responsive, and maintainable** 🚀  
 
-Does this align with your vision? Let’s refine further if needed! 🔥  
+Does this align with your vision? Let's refine further if needed! 🔥  
 Otherwise, we can move forward to **Testing & Deployment Strategy** next.

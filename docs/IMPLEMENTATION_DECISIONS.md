@@ -3,7 +3,7 @@
 ## Overview
 This document captures the key architectural and implementation decisions made during the development of **Mr. Brooks Restaurant Creator**, including rationale and alternatives considered.
 
-*Last Updated: December 2024*
+*Last Updated: June 2025*
 
 ---
 
@@ -204,6 +204,25 @@ enum: ['received', 'confirmed', 'in_kitchen', 'ready_for_pickup', 'delivered', '
 - **Performance** - Fast queries for common operations
 - **Scalability** - Efficient as data volume grows
 - **Cost Effective** - Only index what's actually queried
+
+---
+
+### **13. Menu JSON Import/Export**
+**Decision Made:** Support AI-generated menu content via JSON import
+
+**Implementation:**
+- **Standardized JSON Format** - Clear structure for sections and items
+- **Validation Layer** - Client and server-side schema validation
+- **Two-way Conversion** - Both import and export functionality
+- **AI Integration Ready** - Format compatible with LLM-generated content
+
+**Rationale:**
+- **Efficiency** - Rapid menu creation from external sources
+- **AI Compatibility** - Easy to use AI-generated menu suggestions
+- **Data Portability** - Simple migration from other systems
+- **User Experience** - Reduces manual data entry for restaurant owners
+
+**Alternative Considered:** CSV import (rejected due to hierarchical structure complexity)
 
 ---
 
