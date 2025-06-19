@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "dev:custom": "cross-env PORT=3550 nodemon app.js",
     "test": "jest --detectOpenHandles --forceExit --runInBand --verbose",
     "test:watch": "jest --watch --runInBand",
     "test:coverage": "jest --coverage --detectOpenHandles --forceExit --runInBand",
@@ -13,23 +14,24 @@
     "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx}'"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@supabase/supabase-js": "^2.38.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "mongoose": "^7.5.0",
-    "helmet": "^7.0.0",
+    "express": "^4.18.2",
     "express-validator": "^7.0.1",
+    "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
-    "morgan": "^1.10.0",
-    "@supabase/supabase-js": "^2.38.0"
+    "mongoose": "^7.5.0",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
-    "jest": "^29.6.4",
-    "supertest": "^6.3.3",
-    "nodemon": "^3.0.1",
+    "cross-env": "^7.0.3",
     "eslint": "^8.47.0",
-    "prettier": "^3.0.2"
+    "jest": "^29.6.4",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.0.2",
+    "supertest": "^6.3.3"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -39,7 +41,9 @@
     "coveragePathIgnorePatterns": [
       "/node_modules/"
     ],
-    "setupFilesAfterEnv": ["./tests/jest.setup.js"],
+    "setupFilesAfterEnv": [
+      "./tests/jest.setup.js"
+    ],
     "testTimeout": 10000,
     "verbose": true,
     "clearMocks": true,
@@ -48,4 +52,4 @@
       "/node_modules/"
     ]
   }
-} 
+}

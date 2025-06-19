@@ -1,0 +1,3 @@
+@echo off
+echo Starting Restaurant Developer environment...
+node start-dev.js 

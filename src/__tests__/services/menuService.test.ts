@@ -1,8 +1,25 @@
+/// <reference types="jest" />
 import menuService from '../../services/menuService';
 import api from '../../services/api';
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
+
+// Define types for mocking
+type MockResponse<T> = {
+  data: T;
+};
 
 // Mock the API module
 jest.mock('../../services/api');
+
+// Mock localStorage
+Object.defineProperty(window, 'localStorage', {
+  value: {
+    getItem: jest.fn(() => null),
+    setItem: jest.fn(() => null),
+    removeItem: jest.fn(() => null),
+  },
+  writable: true
+});
 
 describe('menuService', () => {
   const mockRestaurantId = 'test-restaurant-id';
@@ -39,7 +56,7 @@ describe('menuService', () => {
   
   it('getRestaurantMenu should fetch menu data', async () => {
     // Mock API response
-    (api.get as jest.Mock).mockResolvedValue({ data: mockMenu });
+    jest.spyOn(api, 'get').mockResolvedValue({ data: mockMenu });
     
     // Call the service
     const result = await menuService.getRestaurantMenu(mockRestaurantId);
@@ -53,7 +70,7 @@ describe('menuService', () => {
   
   it('createOrUpdateMenu should update menu data', async () => {
     // Mock API response
-    (api.post as jest.Mock).mockResolvedValue({ data: mockMenu });
+    jest.spyOn(api, 'post').mockResolvedValue({ data: mockMenu });
     
     // Call the service
     const result = await menuService.createOrUpdateMenu(mockRestaurantId, mockMenu);
@@ -77,7 +94,7 @@ describe('menuService', () => {
       ...mockMenu,
       sections: [...mockMenu.sections, { _id: 'new-section-id', ...newSection }],
     };
-    (api.post as jest.Mock).mockResolvedValue({ data: updatedMenu });
+    jest.spyOn(api, 'post').mockResolvedValue({ data: updatedMenu });
     
     // Call the service
     const result = await menuService.addOrUpdateSection(mockRestaurantId, newSection);
@@ -91,7 +108,7 @@ describe('menuService', () => {
   
   it('deleteSection should remove a section from the menu', async () => {
     // Mock API response
-    (api.delete as jest.Mock).mockResolvedValue({ data: {} });
+    jest.spyOn(api, 'delete').mockResolvedValue({ data: {} });
     
     // Call the service
     await menuService.deleteSection(mockRestaurantId, mockSectionId);
@@ -111,7 +128,7 @@ describe('menuService', () => {
     
     // Mock API response
     const addedItem = { _id: 'new-item-id', ...newItem };
-    (api.post as jest.Mock).mockResolvedValue({ data: addedItem });
+    jest.spyOn(api, 'post').mockResolvedValue({ data: addedItem });
     
     // Call the service
     const result = await menuService.addOrUpdateItem(mockRestaurantId, mockSectionId, newItem);
@@ -128,7 +145,7 @@ describe('menuService', () => {
   
   it('deleteItem should remove an item from a section', async () => {
     // Mock API response
-    (api.delete as jest.Mock).mockResolvedValue({ data: {} });
+    jest.spyOn(api, 'delete').mockResolvedValue({ data: {} });
     
     // Call the service
     await menuService.deleteItem(mockRestaurantId, mockSectionId, mockItemId);

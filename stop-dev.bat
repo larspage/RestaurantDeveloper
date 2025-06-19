@@ -1,0 +1,3 @@
+@echo off
+echo Stopping Restaurant Developer servers...
+node stop-dev.js 
