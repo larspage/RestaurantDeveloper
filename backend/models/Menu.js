@@ -23,7 +23,11 @@ const menuItemSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
-  // TODO: Add fields like images, dietary restrictions, prep time
+  imageUrl: {
+    type: String,
+    trim: true
+  },
+  // TODO: Add fields like dietary restrictions, prep time
 }, { _id: true });
 
 const menuSectionSchema = new mongoose.Schema({

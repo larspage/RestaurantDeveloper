@@ -47,6 +47,7 @@
   - `DELETE /menus/:restaurant_id/sections/:section_id` - Delete menu section
   - `POST /menus/:restaurant_id/sections/:section_id/items` - Manage menu items
   - `DELETE /menus/:restaurant_id/sections/:section_id/items/:item_id` - Delete menu item
+  - `POST /menus/:restaurant_id/sections/:section_id/items/:item_id/image` - Upload item image
 - ✅ **Order Processing** - **FULLY TESTED & WORKING**
   - `POST /orders/new` - Place new order (guest & authenticated)
   - `GET /orders/history` - Order history for customers
@@ -60,7 +61,7 @@
   - `GET /themes/:id` - Get theme details
   - Default themes seeded in database
 
-### **Frontend Implementation (80% Complete)**
+### **Frontend Implementation (85% Complete)**
 - ✅ **Next.js Setup** - Project initialization with TypeScript and Tailwind CSS
 - ✅ **Project Structure** - Organized components, services, hooks, and pages
 - ✅ **API Services** - Authentication and restaurant data services
@@ -77,6 +78,7 @@
   - Improved delete confirmation with modal dialogs
   - Menu item creation and editing
   - JSON import/export functionality for AI-generated menus
+  - Image upload for menu items with progress tracking
 - ✅ **Theme Selector** - Visual theme customization
 - ❌ **Customer Ordering** - Multi-tenant restaurant websites
 - ❌ **Order Management** - Kitchen dashboard for order tracking
@@ -103,6 +105,12 @@
 - ❌ **Frontend E2E Tests** - Cypress user workflow tests
 - ❌ **Performance Tests** - Load testing for high traffic
 
+### **Storage & Media (100% Complete)**
+- ✅ **Image Upload** - Menu item image upload functionality
+- ✅ **S3 Integration** - MinIO for local development, DigitalOcean Spaces for production
+- ✅ **Progress Tracking** - Upload progress visualization
+- ✅ **Image Preview** - Preview uploaded images before saving
+
 ### **Deployment & DevOps (0% Complete)**
 - ❌ **CI/CD Pipeline** - GitHub Actions workflow
 - ❌ **Docker Configuration** - Containerization setup
@@ -117,11 +125,12 @@
 1. ✅ **Enhanced menuService** - Added comprehensive error handling and validation
 2. ✅ **Complete Test Coverage** - Added tests for error cases and edge cases
 3. ✅ **Section Management UI** - Implemented section reordering, description editing, and delete confirmation
-4. 🔄 **Item Management UI** - Implement image upload, modifications, and availability toggle
+4. ✅ **Item Management UI** - Implemented image upload, modifications, and availability toggle
    - ✅ **Menu Item Image Upload Service** - Added support for image uploads with progress tracking
-   - ⏳ **Image Upload Component** - Create frontend component for image uploading with preview
-   - ⏳ **Item Modifications** - Add support for item modification options
-   - ⏳ **Availability Toggle** - Add visual indicator for item availability
+   - ✅ **Image Upload Component** - Created frontend component for image uploading with preview
+   - ✅ **Image Storage** - Implemented MinIO for local development and configured for DigitalOcean Spaces
+   - ✅ **Item Modifications** - Add support for item modification options
+   - ✅ **Availability Toggle** - Add visual indicator for item availability
 5. **JSON Import/Export Enhancements** - Add schema validation and preview functionality
 6. **Integration Testing** - Create end-to-end tests for menu management workflows
 
@@ -158,6 +167,11 @@
 ---
 
 ## 🔥 **RECENT ACCOMPLISHMENTS**
+- **June 2025**: Implemented image upload functionality for menu items with progress tracking
+- **June 2025**: Created MenuItemForm component with image preview and upload functionality
+- **June 2025**: Implemented MinIO storage for local development and configured for DigitalOcean Spaces
+- **June 2025**: Added backend API endpoint for image uploads with S3 integration
+- **June 2025**: Updated Menu model to include imageUrl field for menu items
 - **June 2025**: Implemented drag-and-drop section reordering in menu management UI
 - **June 2025**: Added section description editing with inline forms
 - **June 2025**: Improved delete confirmation with modal dialogs and impact warnings
@@ -201,9 +215,6 @@
 - **December 2024**: Complete backend authentication system implemented
 - **December 2024**: All Mongoose data models created and optimized
 - **December 2024**: Express.js foundation with security middleware
-- **June 2025**: Enhanced MenuItem interface to support image upload properties
-- **June 2025**: Added uploadItemImage method to menuService with progress tracking
-- **June 2025**: Added comprehensive tests for image upload functionality
 
 ---
 
@@ -224,8 +235,14 @@
 ### **UI Component Design**
 - **Decision**: Created reusable components for common UI patterns
 - **Rationale**: Improves consistency and reduces duplication
-- **Implementation**: Components like DeleteConfirmationModal and MenuSectionList
+- **Implementation**: Components like DeleteConfirmationModal, MenuSectionList, and MenuItemForm
 - **Impact**: Faster development and better maintainability
+
+### **Image Storage**
+- **Decision**: MinIO for local development, DigitalOcean Spaces for production
+- **Rationale**: S3-compatible storage with consistent API across environments
+- **Implementation**: AWS SDK for S3 with environment-specific configuration
+- **Impact**: Seamless development-to-production workflow for image uploads
 
 ### **Drag and Drop Implementation**
 - **Decision**: Used React DnD for section reordering
