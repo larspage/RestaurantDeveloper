@@ -2,18 +2,6 @@
 
 describe('Link Checker', () => {
   const pagesToTest = ['/', '/login'];
-  const knownBrokenLinks = [
-    '/features', // Example of a known page that is not yet implemented
-    '/pricing',
-    '/contact',
-    '/forgot-password',
-    '/examples',
-    '/signup',
-    '/about',
-    '/blog',
-    '/privacy',
-    '/terms'
-  ];
 
   pagesToTest.forEach(page => {
     it(`should check all links on the ${page} page`, () => {
@@ -24,12 +12,6 @@ describe('Link Checker', () => {
         
         // Skip mailto, tel, and other non-http links
         if (!href || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('#')) {
-          return;
-        }
-
-        // Skip known broken links
-        if (knownBrokenLinks.some(brokenLink => href.includes(brokenLink))) {
-          cy.log(`Skipping known broken link: ${href}`);
           return;
         }
 
