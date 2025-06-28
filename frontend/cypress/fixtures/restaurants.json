@@ -1,0 +1,8 @@
+[
+  {
+    "_id": "restaurant-123",
+    "name": "Cypress Test Cafe",
+    "theme": "modern-dark",
+    "ownerId": "user-123"
+  }
+] 

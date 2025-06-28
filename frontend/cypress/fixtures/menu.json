@@ -1,0 +1,21 @@
+{
+  "_id": "menu-123",
+  "restaurantId": "restaurant-123",
+  "sections": [
+    {
+      "_id": "section-1",
+      "name": "Appetizers",
+      "description": "Start your meal with a tasty treat!",
+      "items": [
+        {
+          "_id": "item-1",
+          "name": "Cypress Spring Rolls",
+          "description": "Crispy rolls with a testy filling.",
+          "price": 7.99,
+          "available": true,
+          "imageUrl": "http://localhost:9000/restaurant-menu-images/initial-image.jpg"
+        }
+      ]
+    }
+  ]
+} 

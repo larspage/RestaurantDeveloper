@@ -120,22 +120,46 @@ The menu management implementation has been significantly enhanced with improved
 
 # Implementation Summary
 
-This document summarizes the key implementation details, decisions, and fixes applied to the project.
+This document summarizes the key implementation details and decisions made during the development process.
 
-## Feature: Robust File Uploader
+## Architectural Decisions
+- **Monorepo with npm Workspaces**: The project was converted to a monorepo structure using npm workspaces. This was a critical decision to resolve persistent dependency conflicts between the `frontend` and `backend` packages. This simplifies dependency management and ensures consistency across the project.
 
-### Problem
-The existing file upload functionality was custom-built and suffered from several issues:
-- It generated extremely long base64 data URLs for image previews, which were inefficient and sometimes sent to the server.
-- The file input dialog would not open reliably across all user interactions.
-- The backend server would crash due to `nodemon` incorrectly watching for file uploads instead of source code changes.
-- The file type validation was buggy, incorrectly rejecting valid image formats like PNGs.
+## Frontend Implementation
+- **UI Framework**: Next.js (React)
+- **Styling**: Tailwind CSS
+- **State Management**: React Context API for authentication.
+- **Image Uploads**: Implemented using the `react-dropzone` library for a reliable and user-friendly experience. A reusable `<ImageUploader />` component was created.
 
-### Solution
-A comprehensive solution was implemented:
-1.  **Switched to a Dedicated Library**: The custom file input was replaced with `react-dropzone`, a stable and well-tested library for handling file uploads. This provides a better user experience with drag-and-drop functionality.
-2.  **Created a Reusable Component**: A new `ImageUploader.tsx` component was created to encapsulate all file handling logic, making it easy to reuse and maintain.
-3.  **Corrected Project Structure**: The root `package.json` was reconfigured to use **npm Workspaces**. This resolved persistent "Module not found" errors by creating a proper monorepo structure and ensuring dependencies for the `frontend` and `backend` were installed and linked correctly.
-4.  **Stabilized the Backend Server**: A `nodemon.json` configuration file was added to the backend to explicitly define which directories and files `nodemon` should monitor. This prevents the server from crashing when new images are uploaded.
-5.  **Fixed File Type Validation**: The file filter on the backend was corrected to reliably accept all intended image MIME types (`jpeg`, `png`, `gif`, `webp`).
-6.  **Cleaned Up UI**: Removed all leftover debugging code and components (`ImageDebugger`) from the UI for a clean user experience. 
+## Automated Testing
+- **Framework**: Cypress for end-to-end frontend testing.
+- **Test Suites**:
+  - `menu-management.cy.ts`: Tests the core functionality of the menu management page, specifically image uploads. One test is currently skipped due to a rendering issue in the Cypress environment that requires manual debugging.
+  - `link-checker.cy.ts`: A powerful, automated test that crawls the main pages (`/` and `/login`) to find broken links. It maintains a list of known "coming soon" pages to avoid false positives. This test serves as both a regression tool and a living document of unimplemented pages.
+- **Identified Missing Pages**: The link-checker test has confirmed that the following pages need to be created:
+  - `/features`
+  - `/pricing`
+  - `/contact`
+  - `/forgot-password`
+  - `/examples`
+  - `/signup`
+  - `/about`
+  - `/blog`
+  - `/privacy`
+  - `/terms`
+
+## Backend Implementation
+- **Framework**: Node.js with Express.
+- **Database**: Supabase (PostgreSQL).
+- **Authentication**: JWT-based authentication.
+- **Image Storage**: MinIO for S3-compatible object storage.
+- **File Uploads**: Handled using `multer` with a file type filter. A bug in the regex for PNG files was identified and fixed.
+- **Server Stability**: A `nodemon.json` configuration was added to prevent the server from crashing during image uploads by ignoring non-source files.
+
+## Key Bug Fixes
+- **Invalid Image URL**: Fixed a bug where `FileReader.readAsDataURL()` was generating excessively long, invalid URLs for image previews. Replaced with `URL.createObjectURL()`.
+- **Module Not Found**: Resolved a persistent "Module not found: react-dropzone" error by converting the project to an npm workspace.
+- **PNG Upload Failure**: Fixed a backend bug where the `multer` file filter was incorrectly rejecting PNG files.
+- **Server Crash on Upload**: Resolved an issue where `nodemon` was watching the `uploads` directory, causing the server to crash.
+- **UI Debug Text**: Removed leftover debug text from the menu management page.
+- **`stop-dev.js` script**: Fixed a bug where the script would hang waiting for user input, preventing automated workflows. 
