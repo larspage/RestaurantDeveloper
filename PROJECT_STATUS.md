@@ -167,6 +167,11 @@
 ---
 
 ## 🔥 **RECENT ACCOMPLISHMENTS**
+- **June 2025**: Fixed critical module resolution issues by converting the project to use **npm Workspaces**.
+- **June 2025**: Replaced the buggy custom file uploader with the robust `react-dropzone` library.
+- **June 2025**: Stabilized the backend development server by creating and enforcing a `nodemon.json` configuration to prevent crashes on file uploads.
+- **June 2025**: Corrected backend file type validation to properly accept PNG and other image formats.
+- **June 2025**: Removed all lingering UI bugs and debug code related to image uploads.
 - **June 2025**: Implemented image upload functionality for menu items with progress tracking
 - **June 2025**: Created MenuItemForm component with image preview and upload functionality
 - **June 2025**: Implemented MinIO storage for local development and configured for DigitalOcean Spaces
@@ -243,6 +248,18 @@
 - **Rationale**: S3-compatible storage with consistent API across environments
 - **Implementation**: AWS SDK for S3 with environment-specific configuration
 - **Impact**: Seamless development-to-production workflow for image uploads
+
+### **File Upload Component**
+- **Decision**: Replaced a custom-built file uploader with `react-dropzone`.
+- **Rationale**: The custom solution was unreliable and caused numerous bugs (e.g., file dialog not opening, incorrect data URLs). `react-dropzone` is a stable, well-maintained library that provides a better user experience, including drag-and-drop.
+- **Implementation**: Created a reusable `ImageUploader.tsx` component that wraps `react-dropzone` and integrated it into the `MenuItemForm`.
+- **Impact**: Resolved all file input issues, improved UI, and increased the stability of the menu management feature.
+
+### **Project Dependency Management**
+- **Decision**: Converted the project to a monorepo using **npm Workspaces**.
+- **Rationale**: The project has separate `frontend` and `backend` packages with interdependencies. The previous setup with `file:` links was causing persistent and hard-to-debug module resolution errors (e.g., "Module not found").
+- **Implementation**: Modified the root `package.json` to define workspaces and removed the direct `file:` link from the `frontend` package.
+- **Impact**: Stabilized the development environment, resolved all dependency issues, and established a standard, scalable monorepo architecture.
 
 ### **Drag and Drop Implementation**
 - **Decision**: Used React DnD for section reordering

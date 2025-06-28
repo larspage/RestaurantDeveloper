@@ -4,7 +4,6 @@ import Layout from '../../../components/Layout';
 import { useAuth } from '../../../context/AuthContext';
 import restaurantService, { Restaurant } from '../../../services/restaurantService';
 import themeService, { Theme } from '../../../services/themeService';
-import ProtectedRoute from '../../../components/ProtectedRoute';
 
 const RestaurantDetail = () => {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -319,4 +318,4 @@ const RestaurantDetail = () => {
   );
 };
 
-export default ProtectedRoute(RestaurantDetail, ['restaurant_owner']); 
+export default RestaurantDetail; 

@@ -116,4 +116,26 @@ This document summarizes the implementation of the Menu Management feature in th
 3. Test error handling and edge cases
 
 ## Conclusion
-The menu management implementation has been significantly enhanced with improved error handling, section reordering functionality, and a better user experience for section and item management. We've successfully implemented image upload functionality with progress tracking, preview, and seamless integration with S3-compatible storage. The next phase will focus on enhancing the JSON import/export functionality and implementing comprehensive integration testing. 
+The menu management implementation has been significantly enhanced with improved error handling, section reordering functionality, and a better user experience for section and item management. We've successfully implemented image upload functionality with progress tracking, preview, and seamless integration with S3-compatible storage. The next phase will focus on enhancing the JSON import/export functionality and implementing comprehensive integration testing.
+
+# Implementation Summary
+
+This document summarizes the key implementation details, decisions, and fixes applied to the project.
+
+## Feature: Robust File Uploader
+
+### Problem
+The existing file upload functionality was custom-built and suffered from several issues:
+- It generated extremely long base64 data URLs for image previews, which were inefficient and sometimes sent to the server.
+- The file input dialog would not open reliably across all user interactions.
+- The backend server would crash due to `nodemon` incorrectly watching for file uploads instead of source code changes.
+- The file type validation was buggy, incorrectly rejecting valid image formats like PNGs.
+
+### Solution
+A comprehensive solution was implemented:
+1.  **Switched to a Dedicated Library**: The custom file input was replaced with `react-dropzone`, a stable and well-tested library for handling file uploads. This provides a better user experience with drag-and-drop functionality.
+2.  **Created a Reusable Component**: A new `ImageUploader.tsx` component was created to encapsulate all file handling logic, making it easy to reuse and maintain.
+3.  **Corrected Project Structure**: The root `package.json` was reconfigured to use **npm Workspaces**. This resolved persistent "Module not found" errors by creating a proper monorepo structure and ensuring dependencies for the `frontend` and `backend` were installed and linked correctly.
+4.  **Stabilized the Backend Server**: A `nodemon.json` configuration file was added to the backend to explicitly define which directories and files `nodemon` should monitor. This prevents the server from crashing when new images are uploaded.
+5.  **Fixed File Type Validation**: The file filter on the backend was corrected to reliably accept all intended image MIME types (`jpeg`, `png`, `gif`, `webp`).
+6.  **Cleaned Up UI**: Removed all leftover debugging code and components (`ImageDebugger`) from the UI for a clean user experience. 

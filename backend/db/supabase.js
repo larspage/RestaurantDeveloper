@@ -5,6 +5,8 @@ require('dotenv').config();
 
 // Check if we're in test mode
 const isTestMode = process.env.NODE_ENV === 'test';
+// Check if we're in development mode
+const isDevelopmentMode = process.env.NODE_ENV !== 'production';
 
 // Get Supabase configuration with fallbacks for development
 const supabaseUrl = isTestMode 
@@ -20,7 +22,7 @@ const supabaseAnonKey = isTestMode
   : (process.env.SUPABASE_ANON_KEY || 'mock-anon-key');
 
 // Log configuration status
-console.log(`Supabase initialized in ${isTestMode ? 'TEST' : 'DEVELOPMENT'} mode`);
+console.log(`Supabase initialized in ${isTestMode ? 'TEST' : isDevelopmentMode ? 'DEVELOPMENT' : 'PRODUCTION'} mode`);
 
 // Create Supabase client for server-side operations (admin access)
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -40,6 +42,18 @@ const verifyToken = async (token) => {
     return { id: token.replace('mock.jwt.token.', ''), email: 'test@example.com' };
   }
   
+  // Handle development mode token
+  if (isDevelopmentMode && token === 'dev-mock-token') {
+    console.log('Using development token for authentication');
+    return { 
+      id: 'dev-user-123', 
+      email: 'dev@example.com',
+      user_metadata: {
+        name: 'Development User'
+      }
+    };
+  }
+  
   try {
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
     if (error) throw error;
@@ -54,6 +68,16 @@ const getUserProfile = async (userId) => {
   if (isTestMode) {
     // Return mock profile in test mode
     return { id: userId, name: 'Test User', role: 'customer' };
+  }
+  
+  // Handle development user
+  if (isDevelopmentMode && userId === 'dev-user-123') {
+    return { 
+      id: userId, 
+      name: 'Development User', 
+      role: 'restaurant_owner',
+      restaurant_id: 'dev-restaurant-123'
+    };
   }
   
   try {

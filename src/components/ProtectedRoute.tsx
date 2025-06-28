@@ -11,6 +11,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const router = useRouter();
 
   useEffect(() => {
+    // If not loading and not authenticated, redirect to login
     if (!isLoading && !isAuthenticated) {
       router.push({
         pathname: '/login',

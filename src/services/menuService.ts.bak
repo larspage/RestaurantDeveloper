@@ -246,18 +246,6 @@ const menuService = {
         config
       );
       
-      // Log debug info if available
-      if (response.data.debug) {
-        console.log('===== IMAGE UPLOAD CLIENT DEBUG =====');
-        console.log('Response from server:', response.data);
-        console.log('Image URL:', response.data.imageUrl);
-        console.log('File name:', response.data.debug.fileName);
-        console.log('Bucket name:', response.data.debug.bucketName);
-        console.log('Full path:', response.data.debug.fullPath);
-        console.log('Direct URL:', response.data.debug.directUrl);
-        console.log('===================================');
-      }
-      
       // Return the image URL from the response
       return response.data.imageUrl;
     } catch (error) {

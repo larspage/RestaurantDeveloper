@@ -11,6 +11,24 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Access token required' });
     }
 
+    // Special handling for development mode and dev restaurant
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const isDevRestaurant = req.params.restaurant_id && req.params.restaurant_id.startsWith('dev-');
+    
+    if (isDevelopment && isDevRestaurant && token === 'dev-mock-token') {
+      // For development mode with dev restaurant, use mock user
+      req.user = {
+        id: 'dev-user-123',
+        supabase_id: 'dev-user-123',
+        email: 'dev@example.com',
+        name: 'Development User',
+        role: 'restaurant_owner',
+        restaurant_id: req.params.restaurant_id
+      };
+      return next();
+    }
+
+    // Regular authentication flow
     // Verify token with Supabase
     const supabaseUser = await verifyToken(token);
     

@@ -11,9 +11,19 @@ const api = axios.create({
 // Request interceptor for adding auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Check if we're in development mode and using a dev restaurant
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const isDevRestaurant = config.url && config.url.includes('dev-restaurant');
+    
+    if (isDevelopment && isDevRestaurant) {
+      // Use development token for dev restaurants
+      config.headers.Authorization = `Bearer dev-mock-token`;
+    } else {
+      // Use regular token for production
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },

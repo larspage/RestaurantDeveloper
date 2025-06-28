@@ -226,6 +226,20 @@ enum: ['received', 'confirmed', 'in_kitchen', 'ready_for_pickup', 'delivered', '
 
 ---
 
+### **14. File Upload Component**
+- **Decision**: Replaced a buggy, custom-built file uploader with the `react-dropzone` library.
+- **Rationale**: The custom solution was unreliable and caused numerous bugs (e.g., file dialog not opening, incorrect data URLs being sent to the server). `react-dropzone` is a stable, well-maintained library that provides a better user experience, including drag-and-drop, and solved all outstanding file input issues.
+- **Implementation**: Created a reusable `ImageUploader.tsx` component that wraps `react-dropzone`. This component handles file selection, previews, and validation. It was then integrated into the `MenuItemForm`.
+- **Impact**: Dramatically increased the stability and usability of the menu management feature.
+
+### **15. Project Dependency Management**
+- **Decision**: Converted the project to a monorepo using **npm Workspaces**.
+- **Rationale**: The project has separate `frontend` and `backend` packages with interdependencies. The previous setup, using `file:` links in `package.json`, caused persistent and hard-to-debug module resolution errors (e.g., "Module not found" for `react-dropzone`). npm Workspaces is the standard, modern solution for managing monorepos.
+- **Implementation**: Modified the root `package.json` to define the `frontend` and `backend` workspaces. Removed the direct `file:` link from the `frontend` package. All installations are now run from the root directory.
+- **Impact**: Permanently stabilized the development environment, resolved all dependency and module resolution issues, and established a standard, scalable monorepo architecture for the project.
+
+---
+
 ## 🚀 **DEPLOYMENT DECISIONS**
 
 ### **11. Environment Configuration**

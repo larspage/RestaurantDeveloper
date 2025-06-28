@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
+import Navigation from '../components/Navigation';
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +12,8 @@ export default function Home() {
         <title>Restaurant Developer | Create Your Restaurant Website</title>
         <meta name="description" content="Create and manage your restaurant website with ease" />
       </Head>
+
+      <Navigation />
 
       {/* Hero Section */}
       <header className="bg-gradient-to-r from-primary-700 to-primary-900">

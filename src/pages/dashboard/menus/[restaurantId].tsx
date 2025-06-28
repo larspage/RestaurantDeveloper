@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Layout from '../../../components/Layout';
-import { useAuth } from '../../../hooks/useAuth';
+import { useAuth } from '../../../context/AuthContext';
 import restaurantService, { Restaurant } from '../../../services/restaurantService';
 import menuService, { Menu, MenuSection, MenuItem } from '../../../services/menuService';
-import ProtectedRoute from '../../../components/ProtectedRoute';
 import MenuSectionList from '../../../components/MenuSectionList';
 import DeleteConfirmationModal from '../../../components/DeleteConfirmationModal';
 import MenuItemForm from '../../../components/MenuItemForm';
+import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
 
 const MenuManagement = () => {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -33,6 +33,74 @@ const MenuManagement = () => {
   const router = useRouter();
   const { restaurantId } = router.query;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Check if we're in development mode
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  // Create a mock restaurant and menu for development testing
+  const createMockData = () => {
+    // Mock restaurant data
+    const mockRestaurant: Restaurant = {
+      _id: 'dev-restaurant-123',
+      name: 'Development Test Restaurant',
+      description: 'This is a mock restaurant for development testing',
+      location: '123 Dev Street',
+      cuisine: 'Development Cuisine',
+      status: 'active',
+      owner: 'dev-user-123',
+      theme: 'modern-dark',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Mock menu data with proper MenuItem interface
+    const mockMenu: Menu = {
+      _id: 'dev-menu-123',
+      restaurant: 'dev-restaurant-123',
+      name: 'Development Test Menu',
+      sections: [
+        {
+          _id: 'dev-section-1',
+          name: 'Appetizers',
+          description: 'Start your meal with these delicious options',
+          order: 0,
+          items: [
+            {
+              _id: 'dev-item-1',
+              name: 'Test Appetizer',
+              description: 'A delicious test appetizer',
+              price: 9.99,
+              category: 'appetizer',
+              available: true,
+              modifications: ['Add cheese', 'Extra sauce']
+            }
+          ]
+        },
+        {
+          _id: 'dev-section-2',
+          name: 'Main Courses',
+          description: 'Our signature dishes',
+          order: 1,
+          items: [
+            {
+              _id: 'dev-item-2',
+              name: 'Test Main Course',
+              description: 'A delicious test main course',
+              price: 19.99,
+              category: 'main',
+              available: true,
+              modifications: ['Medium rare', 'Well done']
+            }
+          ]
+        }
+      ],
+      active: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    return { mockRestaurant, mockMenu };
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,6 +108,16 @@ const MenuManagement = () => {
       
       try {
         setIsLoading(true);
+        
+        // Check if this is a development mock ID
+        if (isDevelopment && restaurantId === 'dev-restaurant-123') {
+          // Use mock data in development mode
+          const { mockRestaurant, mockMenu } = createMockData();
+          setRestaurant(mockRestaurant);
+          setMenu(mockMenu);
+          setIsLoading(false);
+          return;
+        }
         
         // Fetch restaurant details
         const restaurantData = await restaurantService.getRestaurant(restaurantId as string);
@@ -64,7 +142,7 @@ const MenuManagement = () => {
     };
 
     fetchData();
-  }, [restaurantId]);
+  }, [restaurantId, isDevelopment]);
 
   const handleAddSection = async () => {
     if (!restaurantId) return;
@@ -330,23 +408,28 @@ const MenuManagement = () => {
         ...updatedItem
       });
       
-      // Update local state
-      const updatedMenu = {
-        ...menu!,
-        sections: menu!.sections.map(section => {
-          if (section._id === sectionId) {
-            return {
-              ...section,
-              items: section.items.map(item => 
-                item._id === itemId ? { ...item, ...updatedItem } : item
-              )
-            };
-          }
-          return section;
-        })
-      };
-      
-      setMenu(updatedMenu);
+      // Check if we got a full menu object or just the updated item
+      if ('sections' in result) {
+        // If we got a full menu back, use it
+        setMenu(result as unknown as Menu);
+      } else {
+        // Update local state with the returned item
+        const updatedMenu = {
+          ...menu!,
+          sections: menu!.sections.map(section => {
+            if (section._id === sectionId) {
+              return {
+                ...section,
+                items: section.items.map(item => 
+                  item._id === itemId ? { ...item, ...result } : item
+                )
+              };
+            }
+            return section;
+          })
+        };
+        setMenu(updatedMenu);
+      }
       setError(null);
       
       // Close the edit form if it was open
@@ -571,8 +654,17 @@ const MenuManagement = () => {
   }
 
   return (
-    <Layout title={`Menu - ${restaurant?.name || 'Restaurant'}`}>
+    <Layout title={restaurant ? `${restaurant.name} - Menu Management` : 'Menu Management'}>
       <div className="container mx-auto px-4 py-8">
+        {isDevelopment && restaurantId === 'dev-restaurant-123' && (
+          <div className="mb-8 bg-green-50 border border-green-200 rounded-lg p-4">
+            <h2 className="text-lg font-semibold text-green-800">Development Mode</h2>
+            <p className="text-green-700">
+              You are viewing a mock restaurant menu for development testing. Changes won't be saved to a database.
+            </p>
+          </div>
+        )}
+        
         {/* Hidden file input for image uploads */}
         <input
           type="file"
@@ -688,25 +780,19 @@ const MenuManagement = () => {
                                 isUploading={uploadingItemId === item._id}
                               />
                             ) : (
-                              <div className="flex justify-between">
+                              <div className="flex justify-between items-center">
                                 <div className="flex-1">
-                                  <div className="flex items-start">
-                                    {/* Display image if available */}
-                                    {item.imageUrl && (
-                                      <div className="mr-4 relative w-20 h-20 rounded overflow-hidden">
-                                        <Image 
-                                          src={item.imageUrl} 
-                                          alt={item.name} 
-                                          layout="fill"
-                                          objectFit="cover"
-                                          className="rounded"
-                                        />
-                                      </div>
-                                    )}
-                                    <div>
-                                      <h3 className="font-medium">{item.name}</h3>
-                                      <p className="text-gray-600 text-sm">{item.description}</p>
-                                      <p className="text-gray-800 font-medium mt-1">${item.price.toFixed(2)}</p>
+                                  <div>
+                                    <h3 className="font-medium text-lg">{item.name}</h3>
+                                    <p className="text-gray-600 text-sm">{item.description}</p>
+                                    <p className="text-gray-800 font-medium mt-1">${item.price.toFixed(2)}</p>
+                                    
+                                    {/* Availability indicator */}
+                                    <div className="mt-2 flex items-center">
+                                      <span className={`inline-block w-2 h-2 rounded-full mr-1 ${item.available ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                      <p className={`mt-1 text-sm ${item.available ? 'text-green-600' : 'text-gray-500'}`}>
+                                        {item.available ? 'Available' : 'Not Available'}
+                                      </p>
                                     </div>
                                   </div>
                                   
@@ -725,11 +811,28 @@ const MenuManagement = () => {
                                     </div>
                                   )}
                                 </div>
-                                <div className="flex space-x-2">
+
+                                {/* Image on the right side */}
+                                <div className="flex items-center ml-4">
+                                  {item.imageUrl && (
+                                    <div className="relative h-24 w-24">
+                                      <Image
+                                        src={`${item.imageUrl}?cacheBust=${Date.now()}`}
+                                        alt={item.name}
+                                        width={96}
+                                        height={96}
+                                        className="rounded-md object-cover"
+                                        unoptimized
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex space-x-2 ml-4">
                                   <button
                                     onClick={() => handleImageUpload(activeSection, item._id!)}
                                     className="text-blue-600 hover:text-blue-800"
-                                    title="Upload image"
+                                    title={item.imageUrl ? "Change image" : "Add image"}
                                     disabled={uploadingItemId === item._id}
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -838,10 +941,4 @@ const MenuManagement = () => {
   );
 };
 
-export default function ProtectedMenuManagement() {
-  return (
-    <ProtectedRoute>
-      <MenuManagement />
-    </ProtectedRoute>
-  );
-} 
+export default MenuManagement; 

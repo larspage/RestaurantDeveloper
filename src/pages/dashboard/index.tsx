@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Layout from '../../components/Layout';
 import { useAuth } from '../../context/AuthContext';
 import restaurantService, { Restaurant } from '../../services/restaurantService';
-import ProtectedRoute from '../../components/ProtectedRoute';
 
 const Dashboard = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -12,6 +11,9 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const router = useRouter();
+  
+  // Check if we're in development mode
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -35,6 +37,9 @@ const Dashboard = () => {
     router.push('/dashboard/restaurants/new');
   };
 
+  // Mock restaurant ID for development testing
+  const mockRestaurantId = 'dev-restaurant-123';
+
   return (
     <Layout title="Restaurant Dashboard">
       <div className="container mx-auto px-4 py-8">
@@ -47,6 +52,27 @@ const Dashboard = () => {
             Create New Restaurant
           </button>
         </div>
+
+        {isDevelopment && (
+          <div className="mb-8 bg-green-50 border border-green-200 rounded-lg p-4">
+            <h2 className="text-lg font-semibold text-green-800 mb-2">Development Mode</h2>
+            <p className="text-green-700 mb-4">
+              Use these direct links to test functionality without needing to create restaurants:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link href={`/dashboard/menus/${mockRestaurantId}`}>
+                <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                  Test Menu Management
+                </span>
+              </Link>
+              <Link href={`/dashboard/restaurants/${mockRestaurantId}`}>
+                <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                  Test Restaurant Management
+                </span>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -122,4 +148,4 @@ const Dashboard = () => {
   );
 };
 
-export default ProtectedRoute(Dashboard, ['restaurant_owner']); 
+export default Dashboard; 

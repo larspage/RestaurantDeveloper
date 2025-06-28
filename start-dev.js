@@ -1,4 +1,4 @@
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -13,6 +13,106 @@ const colors = {
 };
 
 console.log(`${colors.bright}${colors.cyan}=== Restaurant Developer - Development Environment ===\n${colors.reset}`);
+
+// Check if Docker is running
+let dockerRunning = false;
+try {
+  execSync('docker info', { stdio: 'ignore' });
+  dockerRunning = true;
+  console.log(`${colors.green}✓ Docker is running${colors.reset}`);
+} catch (error) {
+  console.log(`${colors.yellow}⚠️ Docker is not running. Image uploads will not work.${colors.reset}`);
+}
+
+// Check if MinIO is running and start it if needed
+if (dockerRunning) {
+  try {
+    const output = execSync('docker ps --filter "name=minio" --format "{{.Names}}"').toString().trim();
+    if (output === 'minio') {
+      console.log(`${colors.green}✓ MinIO is already running${colors.reset}`);
+    } else {
+      console.log(`${colors.yellow}Starting MinIO...${colors.reset}`);
+      try {
+        // Check if container exists but is stopped
+        const containerExists = execSync('docker ps -a --filter "name=minio" --format "{{.Names}}"').toString().trim() === 'minio';
+        if (containerExists) {
+          execSync('docker start minio');
+        } else {
+          execSync('docker run -d -p 9000:9000 -p 9001:9001 --name minio minio/minio server /data --console-address ":9001"');
+        }
+        console.log(`${colors.green}✓ MinIO started successfully${colors.reset}`);
+        console.log(`${colors.cyan}MinIO console: http://localhost:9001 (credentials: minioadmin/minioadmin)${colors.reset}`);
+        
+        // Check if bucket exists and create it if it doesn't
+        setTimeout(() => {
+          try {
+            // Initialize MinIO client
+            try {
+              execSync('docker exec minio mc alias set local http://localhost:9000 minioadmin minioadmin');
+            } catch (error) {
+              // Ignore errors, just trying to ensure the alias is set
+            }
+            
+            // Check if bucket exists
+            try {
+              const bucketExists = execSync('docker exec minio mc ls local | grep restaurant-menu-images').toString().trim() !== '';
+              if (!bucketExists) {
+                console.log(`${colors.yellow}Creating 'restaurant-menu-images' bucket in MinIO...${colors.reset}`);
+                try {
+                  // Create the bucket
+                  execSync('docker exec minio mc mb local/restaurant-menu-images');
+                  // Set the bucket policy to public
+                  execSync('docker exec minio mc policy set public local/restaurant-menu-images');
+                  
+                  // Configure CORS for the bucket
+                  try {
+                    // Create a temporary CORS configuration file
+                    const corsConfig = JSON.stringify({
+                      "Version": "2012-10-17",
+                      "Statement": [
+                        {
+                          "Effect": "Allow",
+                          "Principal": {"AWS": ["*"]},
+                          "Action": ["s3:GetObject"],
+                          "Resource": ["arn:aws:s3:::restaurant-menu-images/*"]
+                        }
+                      ]
+                    });
+                    
+                    // Write the CORS config to a file in the container
+                    execSync(`docker exec minio sh -c 'echo \\'${corsConfig}\\' > /tmp/cors.json'`);
+                    
+                    // Apply the CORS configuration
+                    execSync('docker exec minio mc anonymous set-json /tmp/cors.json local/restaurant-menu-images');
+                    console.log(`${colors.green}✓ Configured CORS for bucket 'restaurant-menu-images'${colors.reset}`);
+                  } catch (corsError) {
+                    console.log(`${colors.yellow}⚠️ Could not configure CORS for bucket: ${corsError.message}${colors.reset}`);
+                  }
+                  
+                  console.log(`${colors.green}✓ Created bucket 'restaurant-menu-images' with public access${colors.reset}`);
+                } catch (createError) {
+                  console.log(`${colors.yellow}⚠️ Failed to create bucket: ${createError.message}${colors.reset}`);
+                  console.log(`${colors.yellow}⚠️ Please create a bucket named 'restaurant-menu-images' manually in the MinIO console (http://localhost:9001)${colors.reset}`);
+                }
+              } else {
+                console.log(`${colors.green}✓ Bucket 'restaurant-menu-images' exists${colors.reset}`);
+              }
+            } catch (error) {
+              console.log(`${colors.yellow}⚠️ Could not check if bucket exists. Please ensure 'restaurant-menu-images' bucket is created in MinIO console.${colors.reset}`);
+            }
+          } catch (error) {
+            console.log(`${colors.yellow}⚠️ Could not check if bucket exists. Please ensure 'restaurant-menu-images' bucket is created in MinIO console.${colors.reset}`);
+          }
+        }, 3000);
+      } catch (error) {
+        console.log(`${colors.yellow}⚠️ Failed to start MinIO: ${error.message}. Image uploads will not work.${colors.reset}`);
+      }
+    }
+  } catch (error) {
+    console.log(`${colors.yellow}⚠️ Could not check MinIO status: ${error.message}. Image uploads may not work.${colors.reset}`);
+  }
+}
+
 console.log(`${colors.yellow}Starting backend and frontend servers...${colors.reset}\n`);
 
 // Define port numbers

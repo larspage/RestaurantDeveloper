@@ -22,3 +22,42 @@ A **multi-tenant restaurant website creator** integrating **Supabase authenticat
 1️⃣ Clone the repository:  
 ```sh
 git clone https://github.com/larspage/RestaurantDeveloper.git
+```
+
+2️⃣ Install dependencies:
+```sh
+npm install
+```
+
+3️⃣ Start the development servers (includes MinIO for image storage):
+```sh
+npm run dev:all
+```
+
+4️⃣ Stop the development servers:
+```sh
+npm run stop
+```
+
+## 📸 Image Storage with MinIO
+This project uses MinIO for image storage in development. The `dev:all` script automatically:
+
+1. Checks if Docker is running
+2. Starts MinIO if it's not already running
+3. Provides information about the MinIO console
+
+To manually manage MinIO:
+```sh
+# Start MinIO and create the required bucket
+npm run setup:minio
+
+# Access the MinIO console
+# URL: http://localhost:9001
+# Username: minioadmin
+# Password: minioadmin
+```
+
+If you encounter issues with image uploads:
+1. Make sure Docker is running
+2. Check that the "restaurant-menu-images" bucket exists in MinIO
+3. Set the bucket's access policy to "public" for development purposes

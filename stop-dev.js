@@ -83,6 +83,48 @@ const killProcessByPid = (pid, name) => {
   });
 };
 
+// Function to check if user wants to stop MinIO as well
+const askStopMinIO = () => {
+  return new Promise((resolve) => {
+    // Check for '-y' or '--yes' command-line argument
+    if (process.argv.includes('-y') || process.argv.includes('--yes')) {
+      console.log(`${colors.yellow}Auto-stopping MinIO due to -y flag.${colors.reset}`);
+      resolve(true);
+      return;
+    }
+
+    console.log(`${colors.yellow}Do you want to stop the MinIO container as well? (y/N)${colors.reset}`);
+    
+    // Set a timeout to auto-answer "no" after 10 seconds
+    const timeout = setTimeout(() => {
+      console.log(`${colors.yellow}No response, leaving MinIO running.${colors.reset}`);
+      resolve(false);
+    }, 10000);
+    
+    process.stdin.once('data', (data) => {
+      clearTimeout(timeout);
+      const answer = data.toString().trim().toLowerCase();
+      resolve(answer === 'y' || answer === 'yes');
+    });
+  });
+};
+
+// Function to stop MinIO container
+const stopMinIO = () => {
+  return new Promise((resolve) => {
+    console.log(`${colors.yellow}Attempting to stop MinIO container...${colors.reset}`);
+    
+    exec('docker stop minio', (error) => {
+      if (error) {
+        console.log(`${colors.yellow}MinIO container not found or already stopped.${colors.reset}`);
+      } else {
+        console.log(`${colors.green}Successfully stopped MinIO container.${colors.reset}`);
+      }
+      resolve();
+    });
+  });
+};
+
 // Main function to stop all servers
 async function stopServers() {
   // Try to stop by PID first if available
@@ -105,7 +147,31 @@ async function stopServers() {
     console.error(`${colors.red}Error removing PID file: ${error.message}${colors.reset}`);
   }
   
-  console.log(`\n${colors.bright}${colors.green}All development servers have been stopped.${colors.reset}`);
+  // Check if MinIO should be stopped
+  try {
+    // Check if Docker is running
+    exec('docker info', async (error) => {
+      if (!error) {
+        // Check if MinIO container is running
+        exec('docker ps --filter "name=minio" --format "{{.Names}}"', async (err, stdout) => {
+          if (!err && stdout.trim() === 'minio') {
+            const shouldStopMinIO = await askStopMinIO();
+            if (shouldStopMinIO) {
+              await stopMinIO();
+            }
+          }
+          console.log(`\n${colors.bright}${colors.green}All development servers have been stopped.${colors.reset}`);
+          process.exit(0); // Ensure the script exits cleanly
+        });
+      } else {
+        console.log(`\n${colors.bright}${colors.green}All development servers have been stopped.${colors.reset}`);
+        process.exit(0); // Ensure the script exits cleanly
+      }
+    });
+  } catch (error) {
+    console.log(`\n${colors.bright}${colors.green}All development servers have been stopped.${colors.reset}`);
+    process.exit(1); // Exit with an error code
+  }
 }
 
 // Run the stop function

@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import authService from '../services/authService';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Check authentication status on component mount
@@ -23,8 +25,18 @@ const Navigation = () => {
     // Add event listener for storage changes (for multi-tab logout)
     window.addEventListener('storage', checkAuth);
     
+    // Add click event listener to close dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
     return () => {
       window.removeEventListener('storage', checkAuth);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -33,6 +45,10 @@ const Navigation = () => {
     setIsLoggedIn(false);
     setUser(null);
     router.push('/');
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
   };
 
   return (
@@ -62,27 +78,32 @@ const Navigation = () => {
                 <Link href="/dashboard" className="text-gray-600 hover:text-primary-600">
                   Dashboard
                 </Link>
-                <div className="relative group">
-                  <button className="flex items-center text-gray-600 hover:text-primary-600">
+                <div className="relative" ref={dropdownRef}>
+                  <button 
+                    onClick={toggleDropdown}
+                    className="flex items-center text-gray-600 hover:text-primary-600 focus:outline-none"
+                  >
                     {user?.name || 'Account'}
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
-                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Profile
-                    </Link>
-                    <Link href="/restaurants" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      My Restaurants
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Logout
-                    </button>
-                  </div>
+                  {dropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                      <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Profile
+                      </Link>
+                      <Link href="/restaurants" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        My Restaurants
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (

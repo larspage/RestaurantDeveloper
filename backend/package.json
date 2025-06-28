@@ -6,12 +6,13 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "dev:custom": "cross-env PORT=3550 nodemon app.js",
+    "dev:custom": "cross-env PORT=3550 nodemon --config nodemon.json app.js",
     "test": "jest --detectOpenHandles --forceExit --runInBand --verbose",
     "test:watch": "jest --watch --runInBand",
     "test:coverage": "jest --coverage --detectOpenHandles --forceExit --runInBand",
     "lint": "eslint src/",
-    "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx}'"
+    "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx}'",
+    "seed-themes": "node db/seed-themes.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.835.0",
