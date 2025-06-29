@@ -89,18 +89,18 @@
 - ✅ **Test Database** - Isolated test environment working
 - ✅ **Supabase Configuration** - Tables and policies setup
 - ✅ **Theme Seeding** - Default themes populated
-- ❌ **Sample Data** - Test restaurants and menus
+- ✅ **Sample Data** - A robust and repeatable database seed script (`backend/scripts/seed.js`) has been created to populate the database with a full set of test data.
 
-### **Testing & Quality (98% Complete)**
-- ✅ **Auth Tests** - Complete test suite (8/8 passing)
-- ✅ **Restaurant API Tests** - Complete test suite (9/9 passing)
-- ✅ **Menu API Tests** - Complete test suite (12/12 passing)
-- ✅ **Order API Tests** - Complete test suite (14/14 passing)
-- ✅ **Theme API Tests** - Complete test suite (4/4 passing)
+### **Testing & Quality (NEEDS REPAIR)**
+- 🟡 **Auth Tests** - Needs repair; currently broken due to test environment issues.
+- 🟡 **Restaurant API Tests** - Needs repair; currently broken due to test environment issues.
+- 🟡 **Menu API Tests** - Needs repair; currently broken due to test environment issues.
+- 🟡 **Order API Tests** - Needs repair; currently broken due to test environment issues.
+- 🟡 **Theme API Tests** - Needs repair; currently broken due to test environment issues.
 - ✅ **Menu Management Frontend Tests** - Tests for menu page and JSON import functionality
 - ✅ **Menu Service Tests** - Complete test suite (20/20 passing)
-- ✅ **Test Infrastructure** - Jest setup with proper mocking
-- ✅ **Authentication Mocking** - Supabase/JWT mocking working
+- 🟡 **Test Infrastructure** - The Jest test environment for the backend is currently unstable. A new strategy using a global setup with a seed script has been implemented as a more robust foundation.
+- 🟡 **Authentication Mocking** - The original mocking strategy was unreliable. A new helper (`testAuthHelper.js`) has been created for the new seed-based testing approach.
 - ✅ **TypeScript Testing** - Fixed TypeScript type definitions for Jest tests
 - ❌ **Frontend E2E Tests** - Cypress user workflow tests
 - ❌ **Performance Tests** - Load testing for high traffic
@@ -161,12 +161,13 @@
 | **Phase 4** | Theme Management API | ✅ Complete | 100% |
 | **Phase 5** | Frontend Foundation | ✅ Complete | 100% |
 | **Phase 6** | Theme System | ✅ Complete | 100% |
-| **Phase 7** | Customer Ordering UI | ❌ Not Started | 0% |
+| **Phase 7** | Customer Ordering UI | 🔄 In Progress | 0% |
 | **Phase 8** | Testing & Deployment | 🔄 In Progress | 90% |
 
 ---
 
 ## 🔥 **RECENT ACCOMPLISHMENTS**
+- **June 2025**: **Created a robust database seeding script** to populate the development environment with a full, repeatable set of test data. This unblocks UI development from a previously broken test suite.
 - **June 2025**: Fixed critical module resolution issues by converting the project to use **npm Workspaces**.
 - **June 2025**: Replaced the buggy custom file uploader with the robust `react-dropzone` library.
 - **June 2025**: Stabilized the backend development server by creating and enforcing a `nodemon.json` configuration to prevent crashes on file uploads.

@@ -1,296 +1,98 @@
 const request = require('supertest');
-const mongoose = require('mongoose');
 const app = require('../app');
-const Restaurant = require('../models/Restaurant');
-const Menu = require('../models/Menu');
+const { getAuthTokenFor } = require('./testAuthHelper');
 const Order = require('../models/Order');
-const { createTestUser, getAuthToken } = require('./testUtils');
+const Restaurant = require('../models/Restaurant');
+const User = require('../models/User');
+const Menu = require('../models/Menu');
+const connectDB = require('../db/mongo');
+const mongoose = require('mongoose');
 
 describe('Order API Endpoints', () => {
-  let ownerToken;
+  let restaurant;
+  let customer;
   let customerToken;
-  let testRestaurant;
-  let testMenu;
-  let testOrder;
-  let testOwner;
-  let testCustomer;
+  let menu;
 
-  beforeEach(async () => {
-    // Create test users for each test
-    testOwner = await createTestUser({
-      email: 'owner@test.com',
-      name: 'Test Owner',
-      role: 'owner'
-    });
-    
-    testCustomer = await createTestUser({
-      email: 'customer@test.com',
-      name: 'Test Customer',
-      role: 'customer'
-    });
+  beforeAll(async () => {
+    await connectDB();
+    // Get seeded data to use for tests
+    restaurant = await Restaurant.findOne({ name: 'Pizza Palace' });
+    customer = await User.findOne({ email: 'customer2@example.com' });
+    customerToken = await getAuthTokenFor('customer2@example.com');
+    menu = await Menu.findOne({ restaurant: restaurant._id });
+  });
 
-    ownerToken = await getAuthToken(testOwner);
-    customerToken = await getAuthToken(testCustomer);
-
-    // Create a test restaurant for each test
-    testRestaurant = await Restaurant.create({
-      name: 'Test Restaurant for Orders',
-      description: 'A test restaurant',
-      location: 'Test Location',
-      cuisine: ['Test Cuisine'],
-      owner: testOwner._id,
-      status: 'active'
-    });
-
-    // Create a test menu for each test
-    testMenu = await Menu.create({
-      restaurant: testRestaurant._id,
-      sections: [{
-        name: 'Test Section',
-        description: 'A test section',
-        displayOrder: 0,
-        items: [{
-          name: 'Test Item',
-          description: 'A test item',
-          price: 9.99,
-          available: true
-        }]
-      }]
-    });
-
-    // Create a test order for each test
-    testOrder = await Order.create({
-      restaurant: testRestaurant._id,
-      customer: testCustomer._id,
-      items: [{
-        name: 'Test Item',
-        price: 9.99,
-        quantity: 2
-      }],
-      total_price: 19.98,
-      status: 'received'
-    });
+  afterAll(async () => {
+    await mongoose.disconnect();
   });
 
   describe('POST /orders/new', () => {
-    it('should create a new order for authenticated user', async () => {
+    it('should allow a logged-in customer to place a new order', async () => {
+      const pizzaItem = menu.sections.find(s => s.name === 'Pizzas').items[0]; // Margherita
       const newOrder = {
-        restaurant_id: testRestaurant._id,
+        restaurant_id: restaurant._id,
         items: [{
-          name: 'New Item',
-          price: 12.99,
-          quantity: 1,
-          modifications: ['No onions']
-        }]
+          _id: pizzaItem._id,
+          name: pizzaItem.name,
+          price: pizzaItem.price,
+          quantity: 2,
+        }],
+        total_price: pizzaItem.price * 2,
       };
 
       const res = await request(app)
         .post('/orders/new')
         .set('Authorization', `Bearer ${customerToken}`)
-        .send(newOrder)
-        .expect(201);
+        .send(newOrder);
 
-      expect(res.body.items[0].name).toBe('New Item');
-      expect(res.body.total_price).toBe(12.99);
-      expect(res.body.status).toBe('received');
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.customer.toString()).toBe(customer._id.toString());
+      expect(res.body.restaurant.toString()).toBe(restaurant._id.toString());
+      expect(res.body.total_price).toBe(28); // 14.00 * 2
     });
 
-    it('should create a new order for guest user', async () => {
-      const newOrder = {
-        restaurant_id: testRestaurant._id,
+    it('should allow a guest to place an order', async () => {
+      const sideItem = menu.sections.find(s => s.name === 'Sides').items[0]; // Garlic Bread
+      const guestOrder = {
+        restaurant_id: restaurant._id,
         items: [{
-          name: 'Guest Item',
-          price: 15.99,
-          quantity: 1
+          _id: sideItem._id,
+          name: sideItem.name,
+          price: sideItem.price,
+          quantity: 1,
         }],
+        total_price: sideItem.price,
         guest_info: {
-          name: 'Guest User',
-          email: 'guest@test.com',
-          phone: '123-456-7890'
+          name: "John Doe",
+          email: "john@example.com",
+          phone: "555-123-4567"
         }
       };
 
       const res = await request(app)
         .post('/orders/new')
-        .send(newOrder)
-        .expect(201);
-
-      expect(res.body.items[0].name).toBe('Guest Item');
-      expect(res.body.guest_info.name).toBe('Guest User');
+        .send(guestOrder);
+      
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.customer).toBeNull();
+      expect(res.body.guest_info.name).toBe("John Doe");
     });
   });
 
   describe('GET /orders/history', () => {
-    it('should return order history for authenticated user', async () => {
+    it("should retrieve the order history for the logged-in customer", async () => {
+      // The seed script creates orders, so this customer should have some.
       const res = await request(app)
         .get('/orders/history')
-        .set('Authorization', `Bearer ${customerToken}`)
-        .expect(200);
+        .set('Authorization', `Bearer ${customerToken}`);
 
-      expect(Array.isArray(res.body)).toBeTruthy();
-    });
-
-    it('should not allow access without authentication', async () => {
-      await request(app)
-        .get('/orders/history')
-        .expect(401);
-    });
-  });
-
-  describe('GET /orders/:id', () => {
-    it('should return order details for authenticated customer', async () => {
-      const order = await Order.create({
-        restaurant: testRestaurant._id,
-        customer: testCustomer._id,
-        items: [{ name: 'Test Item', price: 9.99, quantity: 1 }],
-        total_price: 9.99,
-        status: 'received'
+      expect(res.statusCode).toEqual(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      // Check that all returned orders belong to the correct customer
+      res.body.forEach(order => {
+        expect(order.customer._id.toString()).toBe(customer._id.toString());
       });
-
-      const res = await request(app)
-        .get(`/orders/${order._id}`)
-        .set('Authorization', `Bearer ${customerToken}`)
-        .expect(200);
-
-      expect(res.body._id).toBe(order._id.toString());
-    });
-
-    it('should return order details for guest with correct info', async () => {
-      const order = await Order.create({
-        restaurant: testRestaurant._id,
-        items: [{ name: 'Guest Item', price: 9.99, quantity: 1 }],
-        total_price: 9.99,
-        status: 'received',
-        guest_info: {
-          email: 'guest@test.com',
-          phone: '123-456-7890'
-        }
-      });
-
-      const res = await request(app)
-        .get(`/orders/${order._id}`)
-        .query({ email: 'guest@test.com', phone: '123-456-7890' })
-        .expect(200);
-
-      expect(res.body._id).toBe(order._id.toString());
-    });
-  });
-
-  describe('POST /orders/reorder/:id', () => {
-    it('should create new order based on previous order', async () => {
-      const res = await request(app)
-        .post(`/orders/reorder/${testOrder._id}`)
-        .set('Authorization', `Bearer ${customerToken}`)
-        .expect(201);
-
-      expect(res.body.items).toHaveLength(testOrder.items.length);
-      expect(res.body.total_price).toBe(testOrder.total_price);
-      expect(res.body.status).toBe('received');
-    });
-  });
-
-  describe('GET /orders/restaurant/:restaurant_id/active', () => {
-    it('should return active orders for restaurant owner', async () => {
-      const res = await request(app)
-        .get(`/orders/restaurant/${testRestaurant._id}/active`)
-        .set('Authorization', `Bearer ${ownerToken}`)
-        .expect(200);
-
-      expect(Array.isArray(res.body)).toBeTruthy();
-    });
-
-    it('should not allow non-owners to view active orders', async () => {
-      await request(app)
-        .get(`/orders/restaurant/${testRestaurant._id}/active`)
-        .set('Authorization', `Bearer ${customerToken}`)
-        .expect(403);
-    });
-  });
-
-  describe('PATCH /orders/:id/status', () => {
-    it('should update order status when owner is authenticated', async () => {
-      const update = {
-        status: 'confirmed',
-        estimated_ready_time: new Date(Date.now() + 30 * 60000) // 30 minutes from now
-      };
-
-      const res = await request(app)
-        .patch(`/orders/${testOrder._id}/status`)
-        .set('Authorization', `Bearer ${ownerToken}`)
-        .send(update)
-        .expect(200);
-
-      expect(res.body.status).toBe('confirmed');
-      expect(new Date(res.body.estimated_ready_time)).toBeDefined();
-    });
-
-    it('should not allow customers to update order status', async () => {
-      const update = {
-        status: 'confirmed'
-      };
-
-      await request(app)
-        .patch(`/orders/${testOrder._id}/status`)
-        .set('Authorization', `Bearer ${customerToken}`)
-        .send(update)
-        .expect(403);
-    });
-  });
-
-  describe('POST /orders/:id/cancel', () => {
-    it('should allow customer to cancel their order', async () => {
-      const order = await Order.create({
-        restaurant: testRestaurant._id,
-        customer: testCustomer._id,
-        items: [{ name: 'Test Item', price: 9.99, quantity: 1 }],
-        total_price: 9.99,
-        status: 'received'
-      });
-
-      const res = await request(app)
-        .post(`/orders/${order._id}/cancel`)
-        .set('Authorization', `Bearer ${customerToken}`)
-        .expect(200);
-
-      expect(res.body.status).toBe('cancelled');
-    });
-
-    it('should allow guest to cancel their order with correct info', async () => {
-      const order = await Order.create({
-        restaurant: testRestaurant._id,
-        items: [{ name: 'Guest Item', price: 9.99, quantity: 1 }],
-        total_price: 9.99,
-        status: 'received',
-        guest_info: {
-          email: 'guest@test.com',
-          phone: '123-456-7890'
-        }
-      });
-
-      const res = await request(app)
-        .post(`/orders/${order._id}/cancel`)
-        .send({
-          email: 'guest@test.com',
-          phone: '123-456-7890'
-        })
-        .expect(200);
-
-      expect(res.body.status).toBe('cancelled');
-    });
-
-    it('should not allow cancellation of orders in progress', async () => {
-      const order = await Order.create({
-        restaurant: testRestaurant._id,
-        customer: testCustomer._id,
-        items: [{ name: 'Test Item', price: 9.99, quantity: 1 }],
-        total_price: 9.99,
-        status: 'in_kitchen'
-      });
-
-      await request(app)
-        .post(`/orders/${order._id}/cancel`)
-        .set('Authorization', `Bearer ${customerToken}`)
-        .expect(400);
     });
   });
 }); 

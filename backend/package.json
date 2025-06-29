@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage --detectOpenHandles --forceExit --runInBand",
     "lint": "eslint src/",
     "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx}'",
-    "seed-themes": "node db/seed-themes.js"
+    "seed-themes": "node db/seed-themes.js",
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.835.0",

@@ -240,6 +240,14 @@ enum: ['received', 'confirmed', 'in_kitchen', 'ready_for_pickup', 'delivered', '
 
 ---
 
+### **16. Database Seeding for Development**
+- **Decision**: Created a centralized, repeatable database seeding script.
+- **Rationale**: Manual testing and UI development were hampered by inconsistent or non-existent data. Previous attempts to fix a complex and broken test suite proved to be a time sink. A reliable seeding script provides a "known good state" for the database, allowing developers to build and test features against a consistent set of users, restaurants, menus, and orders. This approach unblocks UI development from the broken test suite.
+- **Implementation**: A new script, `backend/scripts/seed.js`, was created. It connects to the database, clears existing test data, and populates the collections with a rich, interconnected dataset. An `npm run seed` command was added to `backend/package.json` for easy execution.
+- **Impact**: Greatly improved development velocity. Developers can now instantly reset the database to a full, predictable state, making UI development and manual testing much more efficient and reliable.
+
+---
+
 ## 🚀 **DEPLOYMENT DECISIONS**
 
 ### **11. Environment Configuration**

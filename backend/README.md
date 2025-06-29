@@ -21,3 +21,15 @@ This backend is built with **Node.js & Express**, handling:
 1️⃣ Install dependencies:  
 ```sh
 cd backend && npm install  
+```
+
+2️⃣ Create a `.env` file and add your `MONGODB_URI`.
+
+## 🌱 Database Seeding
+To populate your development database with a complete set of test data (users, restaurants, menus, orders), run the following command from the `backend` directory:
+
+```sh
+npm run seed
+```
+
+This will wipe the relevant collections and create a fresh, interconnected dataset. It's safe and recommended to run this command any time you need to reset to a known good state. 

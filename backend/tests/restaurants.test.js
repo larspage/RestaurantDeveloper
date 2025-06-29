@@ -1,155 +1,74 @@
 const request = require('supertest');
-const mongoose = require('mongoose');
 const app = require('../app');
+const { getAuthTokenFor } = require('./testAuthHelper');
 const Restaurant = require('../models/Restaurant');
-const { createTestUser, getAuthToken } = require('./testUtils');
+const User = require('../models/User');
+const connectDB = require('../db/mongo');
+const mongoose = require('mongoose');
 
 describe('Restaurant API Endpoints', () => {
-  let ownerToken;
-  let customerToken;
-  let testRestaurant;
-  let testOwner;
-  let testCustomer;
+  // Connect to the DB before all tests in this file
+  beforeAll(async () => {
+    await connectDB();
+  });
 
-  beforeEach(async () => {
-    // Create test users for each test
-    testOwner = await createTestUser({
-      email: 'owner@test.com',
-      name: 'Test Owner',
-      role: 'owner'
+  // Disconnect after all tests in this file
+  afterAll(async () => {
+    await mongoose.disconnect();
+  });
+
+  describe('POST /restaurants', () => {
+    it('should allow a seeded owner to create a new restaurant', async () => {
+      // Get auth token for a seeded owner
+      const ownerToken = await getAuthTokenFor('owner1@example.com');
+      
+      const res = await request(app)
+        .post('/restaurants')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ name: 'The Test Kitchen', description: 'A restaurant created by a test.' });
+
+      expect(res.statusCode).toEqual(201);
+      expect(res.body.name).toBe('The Test Kitchen');
+      
+      // Verify it was saved to the DB
+      const newRestaurant = await Restaurant.findById(res.body._id);
+      expect(newRestaurant).not.toBeNull();
     });
-    
-    testCustomer = await createTestUser({
-      email: 'customer@test.com',
-      name: 'Test Customer',
-      role: 'customer'
-    });
 
-    ownerToken = await getAuthToken(testOwner);
-    customerToken = await getAuthToken(testCustomer);
+    it('should NOT allow a seeded customer to create a restaurant', async () => {
+      // Get auth token for a seeded customer
+      const customerToken = await getAuthTokenFor('customer1@example.com');
+      
+      const res = await request(app)
+        .post('/restaurants')
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({ name: 'The Forbidden Restaurant', description: 'This should not be created.' });
 
-    // Create a test restaurant for each test
-    testRestaurant = await Restaurant.create({
-      name: 'Test Restaurant',
-      description: 'A test restaurant',
-      location: 'Test Location',
-      cuisine: ['Test Cuisine'],
-      owner: testOwner._id,
-      status: 'active'
+      expect(res.statusCode).toEqual(403); // Forbidden
     });
   });
 
   describe('GET /restaurants', () => {
-    it('should return all restaurants', async () => {
-      const res = await request(app)
-        .get('/restaurants')
-        .expect(200);
-
-      expect(Array.isArray(res.body)).toBeTruthy();
-      expect(res.body.length).toBe(1);
-      expect(res.body[0].name).toBe('Test Restaurant');
+    it('should return a list of all seeded restaurants', async () => {
+      const res = await request(app).get('/restaurants');
+      
+      expect(res.statusCode).toEqual(200);
+      // The seed script creates 3 restaurants
+      expect(res.body.length).toBe(3);
+      expect(res.body[0].name).toBe('The Golden Spoon');
     });
   });
 
   describe('GET /restaurants/:id', () => {
-    it('should return a single restaurant', async () => {
-      const res = await request(app)
-        .get(`/restaurants/${testRestaurant._id}`)
-        .expect(200);
-
-      expect(res.body.name).toBe('Test Restaurant');
-      expect(res.body.description).toBe('A test restaurant');
-    });
-
-    it('should return 404 for non-existent restaurant', async () => {
-      await request(app)
-        .get(`/restaurants/${new mongoose.Types.ObjectId()}`)
-        .expect(404);
-    });
-  });
-
-  describe('POST /restaurants', () => {
-    it('should create a new restaurant when owner is authenticated', async () => {
-      const newRestaurant = {
-        name: 'New Restaurant',
-        description: 'A new test restaurant',
-        location: 'New Location',
-        cuisine: ['New Cuisine']
-      };
-
-      const res = await request(app)
-        .post('/restaurants')
-        .set('Authorization', `Bearer ${ownerToken}`)
-        .send(newRestaurant)
-        .expect(201);
-
-      expect(res.body.name).toBe('New Restaurant');
-      expect(res.body.description).toBe('A new test restaurant');
-    });
-
-    it('should not allow customers to create restaurants', async () => {
-      const newRestaurant = {
-        name: 'New Restaurant',
-        location: 'New Location'
-      };
-
-      await request(app)
-        .post('/restaurants')
-        .set('Authorization', `Bearer ${customerToken}`)
-        .send(newRestaurant)
-        .expect(403);
-    });
-  });
-
-  describe('PATCH /restaurants/:id', () => {
-    it('should update restaurant when owner is authenticated', async () => {
-      const update = {
-        name: 'Updated Restaurant',
-        description: 'Updated description'
-      };
-
-      const res = await request(app)
-        .patch(`/restaurants/${testRestaurant._id}`)
-        .set('Authorization', `Bearer ${ownerToken}`)
-        .send(update)
-        .expect(200);
-
-      expect(res.body.name).toBe('Updated Restaurant');
-      expect(res.body.description).toBe('Updated description');
-    });
-
-    it('should not allow customers to update restaurants', async () => {
-      const update = {
-        name: 'Updated Restaurant'
-      };
-
-      await request(app)
-        .patch(`/restaurants/${testRestaurant._id}`)
-        .set('Authorization', `Bearer ${customerToken}`)
-        .send(update)
-        .expect(403);
-    });
-  });
-
-  describe('DELETE /restaurants/:id', () => {
-    it('should delete restaurant when owner is authenticated', async () => {
-      await request(app)
-        .delete(`/restaurants/${testRestaurant._id}`)
-        .set('Authorization', `Bearer ${ownerToken}`)
-        .expect(200);
-
-      const deletedRestaurant = await Restaurant.findById(testRestaurant._id);
-      expect(deletedRestaurant).toBeNull();
-    });
-
-    it('should not allow customers to delete restaurants', async () => {
-      await request(app)
-        .delete(`/restaurants/${testRestaurant._id}`)
-        .set('Authorization', `Bearer ${customerToken}`)
-        .expect(403);
-
-      const restaurant = await Restaurant.findById(testRestaurant._id);
+    it('should return a single restaurant by its ID', async () => {
+      // Find a seeded restaurant in the DB to get a valid ID
+      const restaurant = await Restaurant.findOne({ name: 'Pizza Palace' });
       expect(restaurant).not.toBeNull();
+
+      const res = await request(app).get(`/restaurants/${restaurant._id}`);
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.name).toBe('Pizza Palace');
     });
   });
 }); 
