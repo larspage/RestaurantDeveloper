@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import restaurantService, { Restaurant } from '../../../services/restaurantService';
 import menuService, { Menu, MenuSection, MenuItem } from '../../../services/menuService';
 import Layout from '../../../components/Layout';
+import { useCart } from '../../../context/CartContext';
 
 interface RestaurantMenuPageProps {
   restaurant: Restaurant;
@@ -11,6 +12,7 @@ interface RestaurantMenuPageProps {
 
 const RestaurantMenuPage = ({ restaurant, menu }: RestaurantMenuPageProps) => {
   const router = useRouter();
+  const { addItem } = useCart();
 
   if (router.isFallback) {
     return <div>Loading...</div>;
@@ -29,10 +31,19 @@ const RestaurantMenuPage = ({ restaurant, menu }: RestaurantMenuPageProps) => {
               <p className="text-lg text-gray-500 mb-4">{section.description}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {section.items.map((item: MenuItem) => (
-                  <div key={item._id} className="border rounded-lg p-4 shadow-sm">
-                    <h3 className="text-2xl font-bold">{item.name}</h3>
-                    <p className="text-gray-700 my-2">{item.description}</p>
-                    <p className="text-xl font-semibold">${item.price.toFixed(2)}</p>
+                  <div key={item._id} className="border rounded-lg p-4 shadow-sm flex flex-col">
+                    <div className="flex-grow">
+                      <h3 className="text-2xl font-bold">{item.name}</h3>
+                      <p className="text-gray-700 my-2">{item.description}</p>
+                      <p className="text-xl font-semibold">${item.price.toFixed(2)}</p>
+                    </div>
+                    <button 
+                      onClick={() => restaurant._id && addItem(item, restaurant._id)}
+                      className="mt-4 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-400"
+                      disabled={!restaurant._id}
+                    >
+                      Add to Cart
+                    </button>
                   </div>
                 ))}
               </div>

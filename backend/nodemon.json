@@ -1,14 +1,14 @@
 {
   "watch": [
-    "app.js",
-    "routes",
-    "models",
-    "middleware",
-    "db"
+    "*.js",
+    "routes/*.js",
+    "models/*.js",
+    "middleware/*.js",
+    "db/*.js"
   ],
   "ext": "js,json",
   "ignore": [
     "node_modules"
   ],
-  "exec": "node app.js"
+  "exec": "node -r dotenv/config app.js"
 } 

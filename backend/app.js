@@ -2,6 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+// The dotenv config is now handled by nodemon.json
+// const path = require('path');
+// require('dotenv').config({ path: path.resolve(__dirname, './.env') });
+
 const { connect } = require('./db/mongo');
 
 // Import routes

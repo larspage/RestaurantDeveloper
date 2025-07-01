@@ -46,7 +46,7 @@ yarn install
 
 3. Create a `.env.local` file in the root directory with the following content:
 ```
-NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://localhost:3550
 ```
 
 4. Start the development server

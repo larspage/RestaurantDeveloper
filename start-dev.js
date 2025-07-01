@@ -1,6 +1,7 @@
 const { spawn, execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config({ path: path.join(__dirname, 'backend', '.env') });
 
 // ANSI color codes for console output
 const colors = {
@@ -115,23 +116,15 @@ if (dockerRunning) {
 
 console.log(`${colors.yellow}Starting backend and frontend servers...${colors.reset}\n`);
 
-// Define port numbers
-const BACKEND_PORT = 3550;
-const FRONTEND_PORT = 3560;
+// Define port numbers from environment or use defaults
+const BACKEND_PORT = process.env.PORT || 3550;
+const FRONTEND_PORT = 3560; // Usually fixed for frontend
 
-// Create a temporary .env file for the backend with the updated port
-const backendEnvPath = path.join(__dirname, 'backend', '.env');
-const backendEnvContent = `PORT=${BACKEND_PORT}\nNODE_ENV=development\n`;
-
-// Check if backend/.env already exists
-if (!fs.existsSync(path.dirname(backendEnvPath))) {
-  console.log(`${colors.red}Backend directory not found. Please make sure you're running this script from the project root.${colors.reset}`);
-  process.exit(1);
-}
-
-// Write or update the backend .env file
-fs.writeFileSync(backendEnvPath, backendEnvContent);
-console.log(`${colors.green}Backend .env file updated with PORT=${BACKEND_PORT}${colors.reset}`);
+// --- Start of change: No longer overwrites the backend .env file ---
+// The script now relies on the existing backend/.env file.
+// We only need to ensure the frontend knows which port to use.
+console.log(`${colors.green}Backend will run on port ${BACKEND_PORT} (from .env file or default).${colors.reset}`);
+// --- End of change ---
 
 // Create a temporary .env file for the frontend with the updated port and API URL
 const frontendEnvPath = path.join(__dirname, '.env.local');

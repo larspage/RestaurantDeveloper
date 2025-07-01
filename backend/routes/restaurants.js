@@ -14,6 +14,19 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get restaurants owned by the current user (authenticated endpoint)
+router.get('/user', authenticateToken, async (req, res) => {
+  try {
+    console.log('Fetching restaurants for user:', req.user.id);
+    const restaurants = await Restaurant.find({ owner: req.user.id });
+    console.log('Found restaurants:', restaurants.length);
+    res.json(restaurants);
+  } catch (error) {
+    console.error('Error fetching user restaurants:', error);
+    res.status(500).json({ message: 'Error fetching your restaurants', error: error.message });
+  }
+});
+
 // Get single restaurant by ID (public endpoint)
 router.get('/:id', async (req, res) => {
   try {
@@ -30,8 +43,15 @@ router.get('/:id', async (req, res) => {
 // Create new restaurant (authenticated owner only)
 router.post('/', authenticateToken, async (req, res) => {
   try {
+    console.log('Create restaurant request from user:', {
+      userId: req.user.id,
+      role: req.user.role,
+      email: req.user.email
+    });
+
     // Check if user is authorized to create a restaurant
     if (req.user.role !== 'restaurant_owner') {
+      console.log('Access denied - user role is:', req.user.role, 'but needs restaurant_owner');
       return res.status(403).json({ message: 'Only restaurant owners can create restaurants' });
     }
 

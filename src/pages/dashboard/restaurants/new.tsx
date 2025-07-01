@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '../../../components/Layout';
-import { useAuth } from '../../../context/AuthContext';
 import restaurantService, { RestaurantFormData } from '../../../services/restaurantService';
 import themeService, { Theme } from '../../../services/themeService';
-import ProtectedRoute from '../../../components/ProtectedRoute';
 
 const NewRestaurant = () => {
   const [formData, setFormData] = useState<RestaurantFormData>({
@@ -192,4 +190,4 @@ const NewRestaurant = () => {
   );
 };
 
-export default ProtectedRoute(NewRestaurant, ['restaurant_owner']); 
+export default NewRestaurant; 

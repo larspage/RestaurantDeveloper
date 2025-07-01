@@ -3,6 +3,7 @@ import type { AppProps } from 'next/app';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { useState } from 'react';
 import { AuthProvider } from '../context/AuthContext';
+import { CartProvider } from '../context/CartContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useRouter } from 'next/router';
 
@@ -29,13 +30,15 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {isPublicRoute(router.pathname) ? (
-          <Component {...pageProps} />
-        ) : (
-          <ProtectedRoute>
+        <CartProvider>
+          {isPublicRoute(router.pathname) ? (
             <Component {...pageProps} />
-          </ProtectedRoute>
-        )}
+          ) : (
+            <ProtectedRoute>
+              <Component {...pageProps} />
+            </ProtectedRoute>
+          )}
+        </CartProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
