@@ -1,26 +1,42 @@
 const request = require('supertest');
 const app = require('../app');
-const { getAuthTokenFor } = require('./testAuthHelper');
+const { createTestUser, getAuthToken } = require('./testUtils');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
-const connectDB = require('../db/mongo');
-const mongoose = require('mongoose');
 
 describe('Restaurant API Endpoints', () => {
-  // Connect to the DB before all tests in this file
-  beforeAll(async () => {
-    await connectDB();
-  });
+  let testOwner;
+  let testCustomer;
+  let testRestaurant;
 
-  // Disconnect after all tests in this file
-  afterAll(async () => {
-    await mongoose.disconnect();
+  beforeEach(async () => {
+    // Create test users for each test
+    testOwner = await User.create({
+      supabase_id: 'test-owner-123',
+      email: 'owner@test.com',
+      name: 'Test Owner',
+      role: 'restaurant_owner'
+    });
+
+    testCustomer = await User.create({
+      supabase_id: 'test-customer-123',
+      email: 'customer@test.com',
+      name: 'Test Customer',
+      role: 'customer'
+    });
+
+    // Create test restaurants for GET tests
+    testRestaurant = await Restaurant.create({
+      name: 'Test Restaurant',
+      description: 'A test restaurant',
+      owner: testOwner._id
+    });
   });
 
   describe('POST /restaurants', () => {
-    it('should allow a seeded owner to create a new restaurant', async () => {
-      // Get auth token for a seeded owner
-      const ownerToken = await getAuthTokenFor('owner1@example.com');
+    it('should allow a restaurant owner to create a new restaurant', async () => {
+      // Get auth token for test owner
+      const ownerToken = await getAuthToken(testOwner);
       
       const res = await request(app)
         .post('/restaurants')
@@ -35,9 +51,9 @@ describe('Restaurant API Endpoints', () => {
       expect(newRestaurant).not.toBeNull();
     });
 
-    it('should NOT allow a seeded customer to create a restaurant', async () => {
-      // Get auth token for a seeded customer
-      const customerToken = await getAuthTokenFor('customer1@example.com');
+    it('should NOT allow a customer to create a restaurant', async () => {
+      // Get auth token for test customer
+      const customerToken = await getAuthToken(testCustomer);
       
       const res = await request(app)
         .post('/restaurants')
@@ -49,26 +65,24 @@ describe('Restaurant API Endpoints', () => {
   });
 
   describe('GET /restaurants', () => {
-    it('should return a list of all seeded restaurants', async () => {
+    it('should return a list of all restaurants', async () => {
       const res = await request(app).get('/restaurants');
       
       expect(res.statusCode).toEqual(200);
-      // The seed script creates 3 restaurants
-      expect(res.body.length).toBe(3);
-      expect(res.body[0].name).toBe('The Golden Spoon');
+      expect(Array.isArray(res.body)).toBe(true);
+      // Should have at least the test restaurant we created
+      expect(res.body.length).toBeGreaterThanOrEqual(1);
+      expect(res.body.some(r => r.name === 'Test Restaurant')).toBe(true);
     });
   });
 
   describe('GET /restaurants/:id', () => {
     it('should return a single restaurant by its ID', async () => {
-      // Find a seeded restaurant in the DB to get a valid ID
-      const restaurant = await Restaurant.findOne({ name: 'Pizza Palace' });
-      expect(restaurant).not.toBeNull();
-
-      const res = await request(app).get(`/restaurants/${restaurant._id}`);
+      const res = await request(app).get(`/restaurants/${testRestaurant._id}`);
 
       expect(res.statusCode).toEqual(200);
-      expect(res.body.name).toBe('Pizza Palace');
+      expect(res.body.name).toBe('Test Restaurant');
+      expect(res.body.description).toBe('A test restaurant');
     });
   });
 }); 

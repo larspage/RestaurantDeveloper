@@ -1,30 +1,77 @@
 const request = require('supertest');
 const app = require('../app');
-const { getAuthTokenFor } = require('./testAuthHelper');
+const { getAuthToken } = require('./testUtils');
 const Order = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 const Menu = require('../models/Menu');
-const connectDB = require('../db/mongo');
-const mongoose = require('mongoose');
 
 describe('Order API Endpoints', () => {
   let restaurant;
   let customer;
   let customerToken;
   let menu;
+  let testOwner;
 
-  beforeAll(async () => {
-    await connectDB();
-    // Get seeded data to use for tests
-    restaurant = await Restaurant.findOne({ name: 'Pizza Palace' });
-    customer = await User.findOne({ email: 'customer2@example.com' });
-    customerToken = await getAuthTokenFor('customer2@example.com');
-    menu = await Menu.findOne({ restaurant: restaurant._id });
-  });
+  beforeEach(async () => {
+    // Create test owner
+    testOwner = await User.create({
+      supabase_id: 'test-owner-123',
+      email: 'owner@test.com',
+      name: 'Test Owner',
+      role: 'restaurant_owner'
+    });
 
-  afterAll(async () => {
-    await mongoose.disconnect();
+    // Create test customer
+    customer = await User.create({
+      supabase_id: 'test-customer-123',
+      email: 'customer@test.com',
+      name: 'Test Customer',
+      role: 'customer'
+    });
+
+    // Create test restaurant
+    restaurant = await Restaurant.create({
+      name: 'Test Pizza Place',
+      description: 'A test pizza restaurant',
+      owner: testOwner._id
+    });
+
+    // Create test menu
+    menu = await Menu.create({
+      restaurant: restaurant._id,
+      name: 'Test Menu',
+      sections: [
+        {
+          name: 'Pizzas',
+          description: 'Delicious pizzas',
+          items: [
+            {
+              name: 'Margherita',
+              description: 'Classic tomato and mozzarella',
+              price: 14.00,
+              category: 'Pizza',
+              available: true
+            }
+          ]
+        },
+        {
+          name: 'Sides',
+          description: 'Side dishes',
+          items: [
+            {
+              name: 'Garlic Bread',
+              description: 'Crispy garlic bread',
+              price: 6.50,
+              category: 'Side',
+              available: true
+            }
+          ]
+        }
+      ]
+    });
+
+    customerToken = await getAuthToken(customer);
   });
 
   describe('POST /orders/new', () => {
@@ -82,16 +129,31 @@ describe('Order API Endpoints', () => {
 
   describe('GET /orders/history', () => {
     it("should retrieve the order history for the logged-in customer", async () => {
-      // The seed script creates orders, so this customer should have some.
+      // First create an order for this customer
+      const pizzaItem = menu.sections.find(s => s.name === 'Pizzas').items[0];
+      await Order.create({
+        customer: customer._id,
+        restaurant: restaurant._id,
+        items: [{
+          _id: pizzaItem._id,
+          name: pizzaItem.name,
+          price: pizzaItem.price,
+          quantity: 1,
+        }],
+        total_price: pizzaItem.price,
+        status: 'confirmed'
+      });
+
       const res = await request(app)
         .get('/orders/history')
         .set('Authorization', `Bearer ${customerToken}`);
 
       expect(res.statusCode).toEqual(200);
       expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThanOrEqual(1);
       // Check that all returned orders belong to the correct customer
       res.body.forEach(order => {
-        expect(order.customer._id.toString()).toBe(customer._id.toString());
+        expect(order.customer.toString()).toBe(customer._id.toString());
       });
     });
   });

@@ -1,27 +1,18 @@
 const request = require('supertest');
 const app = require('../app');
-const { User } = require('../models');
-const { setupTestDB, clearTestDB, closeTestDB } = require('./testUtils');
+const { setupTestDB, closeTestDB, clearTestDB } = require('./testUtils');
+const { createMockToken } = require('./testAuthHelper');
+const User = require('../models/User');
 
-// Set test environment
-process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET = 'test-secret-key';
-
-// Mock Supabase for testing
+// Mock Supabase functions
 jest.mock('../db/supabase', () => ({
-  supabase: {
-    auth: {
-      signUp: jest.fn(),
-      signInWithPassword: jest.fn(),
-      getUser: jest.fn()
-    }
-  },
-  supabaseAdmin: {},
   verifyToken: jest.fn(),
-  getUserProfile: jest.fn()
+  createUser: jest.fn(),
+  signInWithPassword: jest.fn()
 }));
 
-const { supabase, verifyToken } = require('../db/supabase');
+// Get the mocked functions
+const { verifyToken, createUser, signInWithPassword } = require('../db/supabase');
 
 describe('Authentication Endpoints', () => {
   beforeAll(async () => {
@@ -37,17 +28,12 @@ describe('Authentication Endpoints', () => {
     jest.clearAllMocks();
   });
 
-  describe('POST /auth/signup', () => {
+  describe('POST /auth/register', () => {
     it('should create a new customer user successfully', async () => {
-      // Mock Supabase signup success
-      supabase.auth.signUp.mockResolvedValue({
-        data: {
-          user: {
-            id: 'test-uuid-123',
-            email: 'test@example.com'
-          }
-        },
-        error: null
+      // Mock Supabase createUser function
+      createUser.mockResolvedValue({
+        id: 'test-uuid-123',
+        email: 'test@example.com'
       });
 
       const userData = {
@@ -58,15 +44,15 @@ describe('Authentication Endpoints', () => {
       };
 
       const response = await request(app)
-        .post('/auth/signup')
+        .post('/auth/register')
         .send(userData)
         .expect(201);
 
-      expect(response.body.message).toBe('User created successfully');
-      expect(response.body.user_id).toBe('test-uuid-123');
-      expect(response.body.email).toBe('test@example.com');
-      expect(response.body.name).toBe('Test User');
-      expect(response.body.role).toBe('customer');
+      expect(response.body.message).toBe('User registered successfully');
+      expect(response.body.user.user_id).toBe('test-uuid-123');
+      expect(response.body.user.email).toBe('test@example.com');
+      expect(response.body.user.name).toBe('Test User');
+      expect(response.body.user.role).toBe('customer');
 
       // Verify user was created in MongoDB
       const mongoUser = await User.findOne({ supabase_id: 'test-uuid-123' });
@@ -76,14 +62,9 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should create a restaurant owner user successfully', async () => {
-      supabase.auth.signUp.mockResolvedValue({
-        data: {
-          user: {
-            id: 'owner-uuid-123',
-            email: 'owner@restaurant.com'
-          }
-        },
-        error: null
+      createUser.mockResolvedValue({
+        id: 'owner-uuid-123',
+        email: 'owner@restaurant.com'
       });
 
       const userData = {
@@ -95,11 +76,11 @@ describe('Authentication Endpoints', () => {
       };
 
       const response = await request(app)
-        .post('/auth/signup')
+        .post('/auth/register')
         .send(userData)
         .expect(201);
 
-      expect(response.body.role).toBe('restaurant_owner');
+      expect(response.body.user.role).toBe('restaurant_owner');
 
       // Verify restaurant_id was set in MongoDB
       const mongoUser = await User.findOne({ supabase_id: 'owner-uuid-123' });
@@ -108,19 +89,19 @@ describe('Authentication Endpoints', () => {
 
     it('should return error for missing required fields', async () => {
       const response = await request(app)
-        .post('/auth/signup')
+        .post('/auth/register')
         .send({
           email: 'test@example.com'
           // missing password and name
         })
         .expect(400);
 
-      expect(response.body.error).toBe('Email, password, and name are required');
+      expect(response.body.error).toBe('Missing required fields');
     });
 
     it('should return error for invalid role', async () => {
       const response = await request(app)
-        .post('/auth/signup')
+        .post('/auth/register')
         .send({
           email: 'test@example.com',
           password: 'password123',
@@ -138,6 +119,7 @@ describe('Authentication Endpoints', () => {
       // Create a test user in MongoDB
       await User.create({
         supabase_id: 'test-user-123',
+        email: 'test@example.com',
         name: 'Test User',
         role: 'customer'
       });
@@ -145,17 +127,12 @@ describe('Authentication Endpoints', () => {
 
     it('should login user successfully', async () => {
       // Mock Supabase login success
-      supabase.auth.signInWithPassword.mockResolvedValue({
-        data: {
-          user: {
-            id: 'test-user-123',
-            email: 'test@example.com'
-          },
-          session: {
-            access_token: 'mock-jwt-token'
-          }
+      signInWithPassword.mockResolvedValue({
+        user: {
+          id: 'test-user-123',
+          email: 'test@example.com'
         },
-        error: null
+        token: 'mock-jwt-token'
       });
 
       const response = await request(app)
@@ -185,12 +162,13 @@ describe('Authentication Endpoints', () => {
     });
   });
 
-  describe('GET /auth/profile/:user_id', () => {
+  describe('GET /auth/me', () => {
     let testUser;
 
     beforeEach(async () => {
       testUser = await User.create({
         supabase_id: 'test-user-123',
+        email: 'test@example.com',
         name: 'Test User',
         role: 'customer'
       });
@@ -204,18 +182,18 @@ describe('Authentication Endpoints', () => {
 
     it('should return user profile successfully', async () => {
       const response = await request(app)
-        .get('/auth/profile/test-user-123')
+        .get('/auth/me')
         .set('Authorization', 'Bearer mock-token')
         .expect(200);
 
-      expect(response.body.user_id).toBe('test-user-123');
-      expect(response.body.name).toBe('Test User');
-      expect(response.body.role).toBe('customer');
+      expect(response.body.user.user_id).toBe('test-user-123');
+      expect(response.body.user.name).toBe('Test User');
+      expect(response.body.user.role).toBe('customer');
     });
 
     it('should return error without authorization token', async () => {
       const response = await request(app)
-        .get('/auth/profile/test-user-123')
+        .get('/auth/me')
         .expect(401);
 
       expect(response.body.error).toBe('Access token required');
