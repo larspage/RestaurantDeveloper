@@ -42,9 +42,19 @@ describe('menuService', () => {
     ],
     active: true,
   };
+
+  // Store original console.error to restore after tests
+  const originalConsoleError = console.error;
   
   beforeEach(() => {
     jest.clearAllMocks();
+    // Suppress console.error during error handling tests
+    console.error = jest.fn();
+  });
+
+  afterEach(() => {
+    // Restore original console.error
+    console.error = originalConsoleError;
   });
   
   describe('getRestaurantMenu', () => {
@@ -57,11 +67,18 @@ describe('menuService', () => {
       expect(result).toEqual(mockMenu);
     });
     
-    it('should handle API errors', async () => {
+    it('should handle API errors and log them appropriately', async () => {
       const mockError = new Error('Network error');
       mockApi.get.mockRejectedValue(mockError);
       
+      // Verify that the service properly handles and re-throws the error
       await expect(menuService.getRestaurantMenu(mockRestaurantId)).rejects.toThrow('Network error');
+      
+      // Verify that error was logged (console.error was called)
+      expect(console.error).toHaveBeenCalledWith('Error fetching restaurant menu:', mockError);
+      
+      // Verify the API was called with correct parameters even when it fails
+      expect(mockApi.get).toHaveBeenCalledWith(`/menus/${mockRestaurantId}`);
     });
   });
   
@@ -87,12 +104,19 @@ describe('menuService', () => {
       expect(result).toEqual(mockUpdatedMenu);
     });
     
-    it('should handle API errors', async () => {
+    it('should handle API errors and log them appropriately', async () => {
       const mockMenuData = { name: 'Test Menu' };
       const mockError = new Error('Failed to update menu');
       mockApi.post.mockRejectedValue(mockError);
       
+      // Verify that the service properly handles and re-throws the error
       await expect(menuService.createOrUpdateMenu(mockRestaurantId, mockMenuData)).rejects.toThrow('Failed to update menu');
+      
+      // Verify that error was logged with proper context
+      expect(console.error).toHaveBeenCalledWith('Error creating/updating menu:', mockError);
+      
+      // Verify the API was called with correct parameters
+      expect(mockApi.post).toHaveBeenCalledWith(`/menus/${mockRestaurantId}`, mockMenuData);
     });
   });
   

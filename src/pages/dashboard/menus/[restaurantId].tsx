@@ -8,6 +8,7 @@ import menuService, { Menu, MenuSection, MenuItem, MenuItemInput, MenuSectionInp
 import MenuSectionList from '../../../components/MenuSectionList';
 import DeleteConfirmationModal from '../../../components/DeleteConfirmationModal';
 import MenuItemForm from '../../../components/MenuItemForm';
+import ImportPreview from '../../../components/ImportPreview';
 import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
 
 const MenuManagement = () => {
@@ -19,6 +20,8 @@ const MenuManagement = () => {
   const [jsonImportModal, setJsonImportModal] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [importPreview, setImportPreview] = useState<any>(null);
+  const [showImportPreview, setShowImportPreview] = useState(false);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -538,10 +541,19 @@ const MenuManagement = () => {
           return false;
         }
         
-        // Validate base price (required for backward compatibility)
-        if (typeof item.price !== 'number' || item.price < 0) {
-          setJsonError(`Item "${item.name}" must have a valid positive base price`);
-          return false;
+        // Validate base price - allow 0 or missing if price points are provided
+        if (item.pricePoints && Array.isArray(item.pricePoints) && item.pricePoints.length > 0) {
+          // If price points exist, base price can be 0 or missing (will be set from price points)
+          if (item.price !== undefined && (typeof item.price !== 'number' || item.price < 0)) {
+            setJsonError(`Item "${item.name}" base price must be a positive number if provided`);
+            return false;
+          }
+        } else {
+          // If no price points, base price is required
+          if (typeof item.price !== 'number' || item.price <= 0) {
+            setJsonError(`Item "${item.name}" must have a valid positive base price or price points`);
+            return false;
+          }
         }
         
         // Validate price points if present
@@ -568,7 +580,7 @@ const MenuManagement = () => {
     return true;
   };
 
-  const handleJsonImport = async () => {
+  const handleJsonImport = () => {
     try {
       const jsonData = JSON.parse(jsonInput);
       
@@ -576,26 +588,73 @@ const MenuManagement = () => {
         return;
       }
       
-      setIsLoading(true);
-      
-      // Create or update menu with imported data
-      const menuData = {
-        restaurant: restaurantId as string,
+      // Process the JSON data for preview
+      const processedMenuData = {
         name: jsonData.name || `${restaurant?.name || 'Restaurant'} Menu`,
         description: jsonData.description || '',
         sections: jsonData.sections.map((section: any) => ({
           name: section.name,
           description: section.description || '',
-          items: section.items.map((item: any) => ({
-            name: item.name,
-            description: item.description || '',
-            price: item.price,
-            pricePoints: item.pricePoints || undefined, // Include price points if present
-            category: item.category || '',
-            available: item.available !== undefined ? item.available : true,
-            modifications: item.modifications || []
-          }))
-        })),
+          items: section.items.map((item: any) => {
+            // Process price points if present
+            let processedPricePoints = undefined;
+            let effectivePrice = item.price;
+
+            if (item.pricePoints && Array.isArray(item.pricePoints)) {
+              // Process each price point and ensure IDs are present
+              processedPricePoints = item.pricePoints.map((pp: any) => ({
+                id: pp.id || pp.name.toLowerCase().replace(/\s+/g, '-'),
+                name: pp.name,
+                price: pp.price,
+                isDefault: pp.isDefault || false
+              }));
+
+              // If no base price provided, use the first price point or default price point
+              if (!item.price || item.price === 0) {
+                const defaultPricePoint = processedPricePoints.find((pp: any) => pp.isDefault);
+                effectivePrice = defaultPricePoint ? defaultPricePoint.price : processedPricePoints[0].price;
+              }
+            }
+
+            return {
+              name: item.name,
+              description: item.description || '',
+              price: effectivePrice, // Use processed effective price
+              pricePoints: processedPricePoints, // Include processed price points
+              category: item.category || '',
+              available: item.available !== undefined ? item.available : true,
+              modifications: item.modifications || [],
+              customizations: item.customizations || [],
+              image: item.image || undefined,
+              imageUrl: item.imageUrl || undefined
+            };
+          })
+        }))
+      };
+      
+      // Show preview instead of importing directly
+      setImportPreview(processedMenuData);
+      setShowImportPreview(true);
+      setJsonError(null);
+    } catch (err) {
+      console.error('Failed to parse JSON:', err);
+      if (err instanceof SyntaxError) {
+        setJsonError('Invalid JSON format. Please check your JSON syntax.');
+      } else {
+        setJsonError('Failed to process JSON. Please try again.');
+      }
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!importPreview || !restaurantId) return;
+    
+    try {
+      setIsLoading(true);
+      
+      const menuData = {
+        restaurant: restaurantId as string,
+        ...importPreview,
         active: true
       };
       
@@ -603,27 +662,62 @@ const MenuManagement = () => {
       
       setMenu(result);
       setJsonImportModal(false);
+      setShowImportPreview(false);
+      setImportPreview(null);
       setJsonInput('');
       setError(null);
     } catch (err) {
-      console.error('Failed to import JSON:', err);
-      if (err instanceof SyntaxError) {
-        setJsonError('Invalid JSON format. Please check your JSON syntax.');
-      } else {
-        setJsonError('Failed to import menu. Please try again.');
-      }
+      console.error('Failed to import menu:', err);
+      setJsonError('Failed to import menu. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleCancelImport = () => {
+    setShowImportPreview(false);
+    setImportPreview(null);
+  };
+
   const handleExportJson = () => {
     if (!menu) return;
     
+    // Process menu data for clean export with price points
     const exportData = {
       name: menu.name,
-      description: menu.description,
-      sections: menu.sections
+      description: menu.description || '',
+      sections: menu.sections.map(section => ({
+        name: section.name,
+        description: section.description || '',
+        items: section.items.map(item => {
+          // Create clean item object for export
+          const exportItem: any = {
+            name: item.name,
+            description: item.description || '',
+            price: item.price
+          };
+
+          // Include price points if they exist
+          if (item.pricePoints && item.pricePoints.length > 0) {
+            exportItem.pricePoints = item.pricePoints.map(pp => ({
+              id: pp.id,
+              name: pp.name,
+              price: pp.price,
+              ...(pp.isDefault && { isDefault: pp.isDefault })
+            }));
+          }
+
+          // Include optional fields only if they have values
+          if (item.category) exportItem.category = item.category;
+          if (item.available !== undefined) exportItem.available = item.available;
+          if (item.modifications && item.modifications.length > 0) exportItem.modifications = item.modifications;
+          if (item.customizations && item.customizations.length > 0) exportItem.customizations = item.customizations;
+          if (item.image) exportItem.image = item.image;
+          if (item.imageUrl) exportItem.imageUrl = item.imageUrl;
+
+          return exportItem;
+        })
+      }))
     };
     
     const jsonString = JSON.stringify(exportData, null, 2);
@@ -953,7 +1047,7 @@ const MenuManagement = () => {
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                     onClick={handleJsonImport}
                   >
-                    Import
+                    Preview Import
                   </button>
                   <button
                     type="button"
@@ -967,6 +1061,15 @@ const MenuManagement = () => {
             </div>
           </div>
         )}
+        
+        {/* Import Preview Modal */}
+        <ImportPreview
+          isOpen={showImportPreview}
+          menuData={importPreview}
+          onConfirm={handleConfirmImport}
+          onCancel={handleCancelImport}
+          isLoading={isLoading}
+        />
         
         {/* Delete Confirmation Modal */}
         <DeleteConfirmationModal
