@@ -236,3 +236,185 @@ The overall menu management implementation was Level 3 complexity due to:
 - Integration with multiple backend endpoints
 
 **Current Status**: Level 3 implementation completed and production-ready ✅ 
+
+## Customer Website Template Implementation
+
+### Architecture Overview
+**CLARIFIED PLATFORM ARCHITECTURE:**
+- **Main Platform** (current codebase): B2B SaaS for restaurant owners to manage restaurants and menus
+- **Customer Website Template** (new): Standalone deployable websites for each restaurant's customers  
+- **Shared Backend**: Single API serving both the main platform and customer websites
+
+**Customer Website Flow:**
+1. Restaurant owner creates/manages restaurant and menus on main platform
+2. Restaurant gets a standalone customer website (deployed separately)
+3. Customers visit restaurant's website to browse menu and place orders
+4. Orders flow back to restaurant owner's dashboard on main platform
+5. Each restaurant can have custom domain/branding
+
+### Phase 1: Customer Website Template Foundation
+**Total Estimated Time: 5 days (5 Level 1 tasks)**
+
+#### **✅ Task 1: Template Project Structure (Level 1 - 1 day) - COMPLETED**
+- ✅ Created separate `customer-website-template/` directory
+- ✅ Initialized Next.js project with TypeScript and Tailwind CSS
+- ✅ Configured API connection to main backend (API service layer)
+- ✅ Set up environment variables for restaurant ID configuration
+- ✅ Created basic project structure with pages, components, services, types
+- ✅ Copied TypeScript interfaces for MenuItem, Restaurant, Order from main project
+- ✅ Verified build process works correctly
+- ✅ Development server runs on port 3551
+
+#### **✅ Task 2: Menu Display Components (Level 1 - 1 day) - COMPLETED**  
+- ✅ Created customer-focused menu components (MenuItemCard, MenuSection, MenuGrid, RestaurantHeader)
+- ✅ Adapted existing components for optimal customer experience
+- ✅ Focused on ordering UX (clear pricing, easy price point selection, prominent add to cart buttons)
+- ✅ Removed all restaurant management functionality (clean customer interface)
+- ✅ Added image support and mobile-responsive design
+- ✅ Created API service layers (restaurantService, menuService)
+
+#### **✅ Task 3: Customer Shopping Cart (Level 1 - 1 day) - COMPLETED**
+- ✅ Created customer-specific cart implementation (CartContext, ShoppingCart component)
+- ✅ Added guest customer information collection (CustomerInfoForm with validation)
+- ✅ Integrated with existing backend order API (orderService)
+- ✅ Handled order placement for guest customers (complete checkout flow)
+- ✅ Added floating cart button with item count and total
+- ✅ Implemented cart persistence and restaurant switching logic
+
+#### **⏳ Task 4: Main Restaurant Page (Level 1 - 1 day)**
+- Create primary ordering page (`index.tsx`)
+- Fetch restaurant/menu data via API
+- Integrate all components for complete ordering experience
+- Add SEO optimization for restaurant visibility
+
+#### **⏳ Task 5: Order Confirmation System (Level 1 - 1 day)**
+- Create order confirmation and tracking pages
+- Display order status and details
+- Add thank you page with order summary
+- Handle order status updates from backend
+
+### Technical Specifications
+**Template Architecture:**
+```
+customer-website-template/
+├── src/
+│   ├── components/          # Customer-focused UI components
+│   ├── pages/              # Customer website pages
+│   ├── services/           # API integration
+│   ├── context/            # State management
+│   └── types/              # TypeScript definitions
+├── package.json
+├── next.config.js
+└── .env.example
+```
+
+**Key Features:**
+- Standalone deployable template for each restaurant
+- Guest-friendly ordering (no account required)
+- Mobile-optimized customer experience
+- Integration with existing backend API
+- Custom domain/branding per restaurant
+
+### Current Status - Phase 1: 60% Complete (3/5 tasks)
+**✅ Task 1 COMPLETED**: Customer website template foundation established
+**✅ Task 2 COMPLETED**: Customer-focused menu display components implemented  
+**✅ Task 3 COMPLETED**: Customer shopping cart with guest checkout implemented
+**⏳ Task 4 PENDING**: Main restaurant page integration
+**⏳ Task 5 PENDING**: Order confirmation system
+
+### Current Development Status
+**CUSTOMER WEBSITE TEMPLATE - 60% COMPLETE**
+- ✅ **Foundation**: Complete Next.js project with TypeScript and Tailwind CSS
+- ✅ **Components**: All customer-focused UI components implemented
+- ✅ **Shopping Cart**: Full cart functionality with guest checkout
+- ⏳ **Integration**: Restaurant page and order confirmation remaining
+- 🎯 **Ready for Git Check-in**: All completed work ready for version control
+
+### Task 1 Implementation Summary
+**Customer Website Template Foundation - COMPLETED**
+
+**Key Achievements:**
+- ✅ **Project Structure**: Complete Next.js 15.3.4 setup with TypeScript and Tailwind CSS
+- ✅ **API Integration**: Base API service layer configured to connect to main backend (port 3550)
+- ✅ **Environment Configuration**: Restaurant ID and API URL configurable via environment variables
+- ✅ **Type Safety**: Copied and adapted TypeScript interfaces from main project
+- ✅ **Build Verification**: Clean compilation with zero errors
+- ✅ **Development Ready**: Dev server runs on port 3551 (separate from main platform)
+
+**Files Created:**
+- `customer-website-template/package.json` - Project dependencies and scripts
+- `customer-website-template/next.config.js` - Next.js configuration with environment variables
+- `customer-website-template/tailwind.config.js` - Tailwind CSS configuration
+- `customer-website-template/tsconfig.json` - TypeScript configuration
+- `customer-website-template/src/pages/_app.tsx` - Main App component
+- `customer-website-template/src/pages/_document.tsx` - HTML Document structure
+- `customer-website-template/src/pages/index.tsx` - Basic homepage with setup status
+- `customer-website-template/src/styles/globals.css` - Global styles with Tailwind imports
+- `customer-website-template/src/types/MenuItem.ts` - Menu item type definitions
+- `customer-website-template/src/types/Restaurant.ts` - Restaurant type definitions
+- `customer-website-template/src/types/Order.ts` - Order type definitions
+- `customer-website-template/src/services/api.ts` - Base API service layer
+- `customer-website-template/README.md` - Complete setup and usage documentation
+
+**Technical Specifications:**
+- **Port Configuration**: Runs on 3551 (avoids conflict with main platform on 3000/3550)
+- **API Integration**: Configured to connect to backend on localhost:3550
+- **Environment Variables**: `RESTAURANT_ID` and `API_BASE_URL` configurable per deployment
+- **Type Consistency**: Uses same TypeScript interfaces as main project
+- **Build Process**: Clean compilation with modern Next.js 15.3.4
+
+### Task 2 Implementation Summary
+**Customer-Focused Menu Display Components - COMPLETED**
+
+**Key Achievements:**
+- ✅ **MenuItemCard Component**: Customer-optimized item display with image support, price point selection, and prominent add-to-cart buttons
+- ✅ **MenuSection Component**: Clean section layout with automatic filtering of unavailable items
+- ✅ **MenuGrid Component**: Responsive grid layout for organizing all menu sections
+- ✅ **RestaurantHeader Component**: Professional restaurant branding with contact info and hours
+- ✅ **API Service Layer**: Complete restaurant and menu data fetching services
+- ✅ **Mobile-First Design**: Responsive components optimized for mobile ordering
+
+**Components Created:**
+- `customer-website-template/src/components/MenuItemCard.tsx` - Customer-focused menu item display
+- `customer-website-template/src/components/MenuSection.tsx` - Menu section organization
+- `customer-website-template/src/components/MenuGrid.tsx` - Complete menu layout
+- `customer-website-template/src/components/RestaurantHeader.tsx` - Restaurant branding header
+- `customer-website-template/src/services/restaurantService.ts` - Restaurant data API
+- `customer-website-template/src/services/menuService.ts` - Menu data API
+
+**Customer Experience Features:**
+- **Image Support**: Menu item images with responsive display
+- **Price Point Selection**: Clear radio button interface for size/pricing options
+- **Availability Filtering**: Only shows available items to customers
+- **Mobile Optimization**: Touch-friendly interface for mobile ordering
+- **Visual Hierarchy**: Clear pricing, prominent add-to-cart buttons
+- **Restaurant Branding**: Professional header with contact information and hours
+
+### Task 3 Implementation Summary
+**Customer Shopping Cart with Guest Checkout - COMPLETED**
+
+**Key Achievements:**
+- ✅ **CartContext**: Complete state management for shopping cart with TypeScript type safety
+- ✅ **ShoppingCart Component**: Full-featured cart panel with checkout flow
+- ✅ **CustomerInfoForm**: Guest customer information collection with validation
+- ✅ **OrderService**: API integration for order placement with backend
+- ✅ **CartButton**: Floating cart button with real-time item count and total
+- ✅ **Cart Persistence**: Automatic cart state management and restaurant switching
+
+**Components Created:**
+- `customer-website-template/src/context/CartContext.tsx` - Cart state management
+- `customer-website-template/src/components/ShoppingCart.tsx` - Cart panel with checkout
+- `customer-website-template/src/components/CustomerInfoForm.tsx` - Guest info collection
+- `customer-website-template/src/components/CartButton.tsx` - Floating cart button
+- `customer-website-template/src/services/orderService.ts` - Order API integration
+- `customer-website-template/src/types/Cart.ts` - Cart type definitions
+
+**Customer Experience Features:**
+- **Guest Checkout**: No account required for ordering
+- **Form Validation**: Real-time validation for customer information
+- **Price Point Support**: Full integration with menu item price points
+- **Quantity Management**: Easy quantity adjustment with +/- buttons
+- **Cart Persistence**: Cart state maintained across page refreshes
+- **Restaurant Switching**: Automatic cart clearing when switching restaurants
+- **Mobile Optimized**: Touch-friendly interface for mobile devices
+- **Real-time Updates**: Live cart total and item count updates 

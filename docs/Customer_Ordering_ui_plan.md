@@ -1,78 +1,146 @@
-# Implementation Plan: Customer Ordering UI
+# Customer Ordering Website Template Implementation Plan
 
-This document breaks down the "Customer Ordering UI" feature into a series of smaller, actionable tasks, each with a complexity level of 1. This serves as a detailed guide for the implementation phase.
+## 🎯 **ARCHITECTURE CLARIFICATION**
 
----
+**Restaurant Developer Platform Architecture:**
+- **Main Platform** (current codebase): B2B SaaS for restaurant owners to manage restaurants and menus
+- **Customer Website Template** (new): Standalone deployable websites for each restaurant's customers
+- **Shared Backend**: Single API serving both the main platform and customer websites
 
-### **Task 1: Restaurant Menu Page Shell & Data Fetching**
+### **Customer Website Flow:**
+1. Restaurant owner creates/manages restaurant and menus on main platform
+2. Restaurant gets a standalone customer website (deployed separately)
+3. Customers visit restaurant's website to browse menu and place orders
+4. Orders flow back to restaurant owner's dashboard on main platform
+5. Each restaurant can have custom domain/branding
 
-*   **Complexity:** 1
-*   **Description:** Create the foundational dynamic page for displaying a restaurant's public menu. This task focuses on setting up the page structure and fetching the necessary data from the backend.
-*   **Files to Create/Modify:**
-    *   **Create:** `src/pages/restaurants/[restaurantId]/index.tsx`
-    *   **Create/Modify:** `src/services/restaurantService.ts` (to ensure a `getRestaurantDetails(id)` method exists).
-    *   **Create/Modify:** `src/services/menuService.ts` (to ensure a `getMenu(restaurantId)` method exists).
-*   **Implementation Details:**
-    *   Use Next.js's `getStaticPaths` and `getStaticProps` for efficient, server-side data fetching.
-    *   Fetch restaurant details from the `GET /restaurants/:restaurantId` endpoint.
-    *   Fetch the full menu from the `GET /menus/:restaurantId` endpoint.
-    *   Render a basic layout displaying the restaurant's name and a list of menu sections and items. UI styling can be minimal at this stage.
+## 📋 **IMPLEMENTATION PHASES**
 
----
+### **Phase 1: Customer Website Template Foundation**
+**Total Estimated Time: 5 days (5 Level 1 tasks)**
 
-### **Task 2: Shopping Cart Context & UI Component**
+#### **Task 1: Template Project Structure (Level 1 - 1 day)**
+- Create separate `customer-website-template/` directory
+- Initialize Next.js project with TypeScript and Tailwind
+- Configure API connection to main backend
+- Set up environment variables for restaurant ID configuration
 
-*   **Complexity:** 1
-*   **Description:** Establish the state management for the shopping cart using React Context and create the basic UI component to display the cart's contents.
-*   **Files to Create/Modify:**
-    *   **Create:** `src/context/CartContext.tsx`
-    *   **Create:** `src/components/ShoppingCart.tsx`
-    *   **Modify:** `src/pages/_app.tsx`
-*   **Implementation Details:**
-    *   The `CartContext` will manage the cart's state (e.g., an array of items). It should expose functions like `addItem`, `removeItem`, and `updateItemQuantity`.
-    *   The `ShoppingCart.tsx` component will consume the `CartContext` to display the list of items, quantities, and a running total.
-    *   Wrap the main application in `_app.tsx` with the `CartProvider` to make the cart state globally available.
+#### **Task 2: Menu Display Components (Level 1 - 1 day)**  
+- Create customer-focused menu components
+- Adapt existing components for customer experience
+- Focus on ordering UX (clear pricing, easy selection)
+- Remove all restaurant management functionality
 
----
+#### **Task 3: Customer Shopping Cart (Level 1 - 1 day)**
+- Create customer-specific cart implementation
+- Add guest customer information collection
+- Integrate with existing backend order API
+- Handle order placement for guest customers
 
-### **Task 3: "Add to Cart" Functionality**
+#### **Task 4: Main Restaurant Page (Level 1 - 1 day)**
+- Create primary ordering page (`index.tsx`)
+- Fetch restaurant/menu data via API
+- Integrate all components for complete ordering experience
+- Add SEO optimization for restaurant visibility
 
-*   **Complexity:** 1
-*   **Description:** Connect the menu items on the restaurant page to the shopping cart, allowing users to add items to their order.
-*   **Files to Create/Modify:**
-    *   **Modify:** `src/pages/restaurants/[restaurantId]/index.tsx`
-*   **Implementation Details:**
-    *   Add an "Add to Cart" button to each menu item displayed on the page.
-    *   When a user clicks the button, call the `addItem` function from the `CartContext`.
-    *   The `ShoppingCart` component should dynamically update to reflect the new item in the cart.
+#### **Task 5: Order Confirmation System (Level 1 - 1 day)**
+- Create order confirmation and tracking pages
+- Display order status and details
+- Add thank you page with order summary
+- Handle order status updates from backend
 
----
+### **Phase 2: Template Enhancement (Future)**
+- Restaurant theming/branding system
+- Customer account system (favorites, order history)
+- Advanced order tracking
+- Mobile app optimization
 
-### **Task 4: Place Order & Create Confirmation Page**
+## 🔧 **TECHNICAL SPECIFICATIONS**
 
-*   **Complexity:** 1
-*   **Description:** Implement the logic to submit the user's order to the backend and create the page they are redirected to upon successful submission.
-*   **Files to Create/Modify:**
-    *   **Create:** `src/services/orderService.ts`
-    *   **Create:** `src/pages/orders/[orderId].tsx`
-    *   **Modify:** `src/components/ShoppingCart.tsx`
-*   **Implementation Details:**
-    *   Create an `orderService.ts` file with a `placeOrder(orderData)` function that sends a request to the `POST /orders/new` endpoint.
-    *   Wire the "Place Order" button in the `ShoppingCart` to call this service function.
-    *   On a successful API response, clear the cart state and programmatically redirect the user to the `/orders/[orderId]` page, using the `orderId` from the response.
-    *   The `[orderId].tsx` page will fetch the order details from `GET /orders/:id` and display a confirmation summary.
+### **Template Architecture:**
+```
+customer-website-template/
+├── src/
+│   ├── components/          # Customer-focused UI components
+│   │   ├── MenuItemCard.tsx
+│   │   ├── ShoppingCart.tsx
+│   │   ├── CustomerInfoForm.tsx
+│   │   └── OrderStatus.tsx
+│   ├── pages/              # Customer website pages
+│   │   ├── index.tsx       # Main menu/ordering page
+│   │   └── orders/
+│   │       └── [orderId].tsx
+│   ├── services/           # API integration
+│   │   ├── restaurantService.ts
+│   │   ├── menuService.ts
+│   │   └── orderService.ts
+│   ├── context/            # State management
+│   │   └── CartContext.tsx
+│   └── types/              # TypeScript definitions
+├── package.json
+├── next.config.js
+└── .env.example
+```
 
----
+### **API Integration:**
+- **Backend URL**: Configurable via environment variables
+- **Restaurant ID**: Set per deployment to identify which restaurant
+- **Endpoints Used**:
+  - `GET /restaurants/:id` - Restaurant information
+  - `GET /menus/:restaurant_id` - Menu data with price points
+  - `POST /orders/new` - Place customer orders
 
-### **Task 5: User Order History Page**
+### **Deployment Strategy:**
+- Each restaurant gets their own deployment of the template
+- Environment variables configure which restaurant data to load
+- Custom domains/subdomains per restaurant
+- Shared backend API serves all customer websites
 
-*   **Complexity:** 1
-*   **Description:** Create the page where logged-in users can view their past orders. This page must be protected and only accessible to authenticated users.
-*   **Files to Create/Modify:**
-    *   **Create:** `src/pages/account/history.tsx`
-    *   **Modify:** `src/services/orderService.ts`
-*   **Implementation Details:**
-    *   Wrap the page component in the existing `ProtectedRoute` component to enforce login.
-    *   In `orderService.ts`, add a `getOrderHistory()` function that calls the `GET /orders/history` endpoint.
-    *   On the history page, call this service to fetch and display the list of past orders.
-    *   Each order in the list should link to its detailed view at `/orders/[orderId]`.
+## 🎨 **CUSTOMER EXPERIENCE FOCUS**
+
+### **Key Differences from Main Platform:**
+- **Simplified Navigation**: Focus on menu browsing and ordering
+- **Guest-Friendly**: No account required to place orders
+- **Mobile-Optimized**: Primary interface for customer ordering
+- **Restaurant Branding**: Display restaurant identity prominently
+- **Fast Loading**: Optimized for customer conversion
+
+### **Order Flow:**
+1. Customer visits restaurant website
+2. Browses menu with price point options
+3. Adds items to cart with selected price points
+4. Provides contact information (guest checkout)
+5. Places order and receives confirmation
+6. Can track order status via confirmation link
+
+## 📊 **SUCCESS METRICS**
+
+### **Phase 1 Completion Criteria:**
+- ✅ Template project builds and runs successfully
+- ✅ Menu displays correctly with price points
+- ✅ Shopping cart handles price point selection
+- ✅ Guest customers can place orders
+- ✅ Orders appear in main platform for restaurant owners
+- ✅ Order confirmation system works end-to-end
+
+### **Quality Standards:**
+- Full TypeScript type safety
+- Responsive design (mobile-first)
+- Fast loading times (< 3 seconds)
+- Accessibility compliance
+- SEO optimization for restaurant discovery
+
+## 🔄 **INTEGRATION WITH MAIN PLATFORM**
+
+### **Data Flow:**
+- **Restaurant Setup**: Done via main platform
+- **Menu Management**: Updated via main platform, reflected in customer sites
+- **Order Processing**: Orders placed on customer sites, managed via main platform
+- **Analytics**: Order data available in restaurant owner dashboard
+
+### **Shared Components/Types:**
+- Reuse TypeScript interfaces for MenuItem, Restaurant, Order
+- Adapt existing service patterns for API communication
+- Maintain consistency in data structures and validation
+
+This architecture provides a clean separation between restaurant management (B2B) and customer ordering (B2C) while maintaining a unified backend system.
