@@ -23,11 +23,18 @@ const ShoppingCart = () => {
     setIsLoading(true);
     setError(null);
 
-    const orderItems = cartItems.map(item => ({
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-    }));
+    const orderItems = cartItems.map(item => {
+      // Use selected price point price if available, otherwise use base price
+      const effectivePrice = item.selectedPricePoint ? item.selectedPricePoint.price : item.price;
+      
+      return {
+        name: item.name,
+        price: effectivePrice,
+        quantity: item.quantity,
+        // Include price point info for order tracking
+        pricePointName: item.selectedPricePoint?.name,
+      };
+    });
 
     const payload: OrderPayload = {
       restaurant_id: restaurantId,
@@ -71,29 +78,44 @@ const ShoppingCart = () => {
       ) : (
         <>
           <div className="space-y-4">
-            {cartItems.map(item => (
-              <div key={item._id} className="flex justify-between items-center">
-                <div>
-                  <h4 className="font-semibold">{item.name}</h4>
-                  <p className="text-sm text-gray-600">${item.price.toFixed(2)}</p>
+            {cartItems.map(item => {
+              // Generate cart item ID for this item
+              const cartItemId = item.selectedPricePoint 
+                ? `${item._id}-${item.selectedPricePoint.id}` 
+                : item._id;
+              
+              // Get effective price (selected price point or base price)
+              const effectivePrice = item.selectedPricePoint ? item.selectedPricePoint.price : item.price;
+              
+              return (
+                <div key={cartItemId} className="flex justify-between items-center">
+                  <div>
+                    <h4 className="font-semibold">{item.name}</h4>
+                    {item.selectedPricePoint && (
+                      <p className="text-xs text-blue-600 font-medium">
+                        {item.selectedPricePoint.name}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-600">${effectivePrice.toFixed(2)}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItemQuantity(cartItemId, parseInt(e.target.value, 10))}
+                      className="w-16 text-center border rounded"
+                    />
+                    <button 
+                      onClick={() => removeItem(cartItemId)} 
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateItemQuantity(item._id, parseInt(e.target.value, 10))}
-                    className="w-16 text-center border rounded"
-                  />
-                  <button 
-                    onClick={() => removeItem(item._id)} 
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="border-t mt-4 pt-4">

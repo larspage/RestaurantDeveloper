@@ -1,11 +1,11 @@
 // src/context/CartContext.tsx
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { CartItem } from '../types/Cart';
-import { MenuItem } from '../types/MenuItem';
+import { MenuItem, PricePoint } from '../types/MenuItem';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addItem: (item: MenuItem, restaurantId: string) => void;
+  addItem: (item: MenuItem, restaurantId: string, selectedPricePoint?: PricePoint) => void;
   removeItem: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -39,7 +39,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     // You could potentially load cart from localStorage here
   }, []);
 
-  const addItem = (item: MenuItem, newRestaurantId: string) => {
+  const addItem = (item: MenuItem, newRestaurantId: string, selectedPricePoint?: PricePoint) => {
     // If cart is for a different restaurant, clear it first.
     // A more user-friendly approach would be to ask for confirmation.
     if (restaurantId && restaurantId !== newRestaurantId) {
@@ -49,33 +49,67 @@ export const CartProvider = ({ children }: CartProviderProps) => {
       setRestaurantId(newRestaurantId);
     }
     
+    // Create a unique identifier for cart items that includes price point
+    const cartItemId = selectedPricePoint 
+      ? `${item._id}-${selectedPricePoint.id}` 
+      : item._id;
+    
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(i => i._id === item._id);
+      const existingItem = prevItems.find(i => {
+        // Match by item ID and selected price point
+        const existingCartItemId = i.selectedPricePoint 
+          ? `${i._id}-${i.selectedPricePoint.id}` 
+          : i._id;
+        return existingCartItemId === cartItemId;
+      });
+      
       if (existingItem) {
-        // Increase quantity if item already exists
-        return prevItems.map(i =>
-          i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i
-        );
+        // Increase quantity if item with same price point already exists
+        return prevItems.map(i => {
+          const existingCartItemId = i.selectedPricePoint 
+            ? `${i._id}-${i.selectedPricePoint.id}` 
+            : i._id;
+          return existingCartItemId === cartItemId 
+            ? { ...i, quantity: i.quantity + 1 } 
+            : i;
+        });
       }
-      // Add new item with quantity 1
-      return [...prevItems, { ...item, quantity: 1 }];
+      
+      // Add new item with quantity 1 and selected price point
+      const cartItem: CartItem = { 
+        ...item, 
+        quantity: 1,
+        selectedPricePoint
+      };
+      
+      return [...prevItems, cartItem];
     });
     setIsCartOpen(true); // Open cart when item is added
   };
 
-  const removeItem = (itemId: string) => {
-    setCartItems(prevItems => prevItems.filter(i => i._id !== itemId));
+  const removeItem = (cartItemId: string) => {
+    setCartItems(prevItems => prevItems.filter(i => {
+      // Generate the same cart item ID logic for comparison
+      const currentCartItemId = i.selectedPricePoint 
+        ? `${i._id}-${i.selectedPricePoint.id}` 
+        : i._id;
+      return currentCartItemId !== cartItemId;
+    }));
   };
 
-  const updateItemQuantity = (itemId: string, quantity: number) => {
+  const updateItemQuantity = (cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
       // Remove item if quantity is 0 or less
-      removeItem(itemId);
+      removeItem(cartItemId);
     } else {
       setCartItems(prevItems =>
-        prevItems.map(i =>
-          i._id === itemId ? { ...i, quantity: quantity } : i
-        )
+        prevItems.map(i => {
+          // Generate the same cart item ID logic for comparison
+          const currentCartItemId = i.selectedPricePoint 
+            ? `${i._id}-${i.selectedPricePoint.id}` 
+            : i._id;
+          return currentCartItemId === cartItemId ? { ...i, quantity: quantity } : i;
+        })
       );
     }
   };
@@ -89,7 +123,11 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     setIsCartOpen(prev => !prev);
   }
 
-  const cartTotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const cartTotal = cartItems.reduce((total, item) => {
+    // Use selected price point price if available, otherwise use base price
+    const effectivePrice = item.selectedPricePoint ? item.selectedPricePoint.price : item.price;
+    return total + effectivePrice * item.quantity;
+  }, 0);
   const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
 
   const value = {
