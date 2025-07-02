@@ -1,7 +1,7 @@
 // src/context/CartContext.tsx
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { CartItem } from '../types/Cart';
-import { MenuItem } from '../../backend/models/Menu';
+import { MenuItem } from '../types/MenuItem';
 
 interface CartContextType {
   cartItems: CartItem[];

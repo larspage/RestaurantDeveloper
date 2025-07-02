@@ -85,7 +85,10 @@ const ShoppingCart = () => {
                     onChange={(e) => updateItemQuantity(item._id, parseInt(e.target.value, 10))}
                     className="w-16 text-center border rounded"
                   />
-                  <button onClick={() => removeItem(item._id)} className="text-red-500 hover:text-red-700">
+                  <button 
+                    onClick={() => removeItem(item._id)} 
+                    className="text-red-500 hover:text-red-700"
+                  >
                     Remove
                   </button>
                 </div>

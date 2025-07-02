@@ -1,37 +1,8 @@
 import api from './api';
+import { MenuItem, MenuItemInput, MenuSection, MenuSectionInput, Menu } from '../types/MenuItem';
 
-export interface MenuItem {
-  _id?: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  available: boolean;
-  image?: string;
-  imageUrl?: string;
-  imageFile?: File;
-  imageUploadProgress?: number;
-  modifications?: string[];
-}
-
-export interface MenuSection {
-  _id?: string;
-  name: string;
-  description: string;
-  items: MenuItem[];
-  order?: number;
-}
-
-export interface Menu {
-  _id?: string;
-  restaurant: string;
-  name: string;
-  description?: string;
-  sections: MenuSection[];
-  active: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
+// Re-export types for backward compatibility
+export type { MenuItem, MenuItemInput, MenuSection, MenuSectionInput, Menu };
 
 /**
  * Validates that a restaurant ID is provided and not empty
@@ -79,7 +50,7 @@ const menuService = {
   /**
    * Add or update a menu section
    */
-  async addOrUpdateSection(restaurantId: string, sectionData: Partial<MenuSection>): Promise<Menu> {
+  async addOrUpdateSection(restaurantId: string, sectionData: Partial<MenuSectionInput>): Promise<Menu> {
     validateRestaurantId(restaurantId);
     
     if (!sectionData) {
@@ -139,7 +110,7 @@ const menuService = {
   /**
    * Add or update a menu item within a section
    */
-  async addOrUpdateItem(restaurantId: string, sectionId: string, itemData: Partial<MenuItem>): Promise<MenuItem> {
+  async addOrUpdateItem(restaurantId: string, sectionId: string, itemData: Partial<MenuItemInput>): Promise<MenuItem> {
     validateRestaurantId(restaurantId);
     
     if (!sectionId) {

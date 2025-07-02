@@ -1,4 +1,4 @@
-import { MenuItem } from '../../backend/models/Menu';
+import { MenuItem } from './MenuItem';
 
 export interface CartItem extends MenuItem {
   quantity: number;
