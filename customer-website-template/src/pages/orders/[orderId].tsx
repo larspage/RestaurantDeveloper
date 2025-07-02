@@ -1,10 +1,10 @@
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Order } from '@/types/Order';
-import { Restaurant } from '@/types/Restaurant';
-import orderService from '@/services/orderService';
-import restaurantService from '@/services/restaurantService';
+import { Order } from '../../types/Order';
+import { Restaurant } from '../../types/Restaurant';
+import orderService from '../../services/orderService';
+import restaurantService from '../../services/restaurantService';
 
 interface OrderPageProps {
   order: Order | null;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GuestCustomerInfo } from '@/types/Cart';
+import { GuestCustomerInfo } from '../types/Cart';
 
 interface CustomerInfoFormProps {
   onSubmit: (info: GuestCustomerInfo) => void;

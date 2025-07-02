@@ -1,13 +1,13 @@
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import { Restaurant } from '@/types/Restaurant';
-import { Menu, MenuItem, PricePoint } from '@/types/MenuItem';
-import { useCart } from '@/context/CartContext';
-import RestaurantHeader from '@/components/RestaurantHeader';
-import MenuGrid from '@/components/MenuGrid';
-import restaurantService from '@/services/restaurantService';
-import menuService from '@/services/menuService';
+import { Restaurant } from '../types/Restaurant';
+import { Menu, MenuItem, PricePoint } from '../types/MenuItem';
+import { useCart } from '../context/CartContext';
+import RestaurantHeader from '../components/RestaurantHeader';
+import MenuGrid from '../components/MenuGrid';
+import restaurantService from '../services/restaurantService';
+import menuService from '../services/menuService';
 
 interface RestaurantPageProps {
   restaurant: Restaurant | null;

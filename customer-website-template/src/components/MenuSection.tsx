@@ -1,5 +1,5 @@
 import React from 'react';
-import { MenuSection as MenuSectionType, MenuItem, PricePoint } from '@/types/MenuItem';
+import { MenuSection as MenuSectionType, MenuItem, PricePoint } from '../types/MenuItem';
 import MenuItemCard from './MenuItemCard';
 
 interface MenuSectionProps {

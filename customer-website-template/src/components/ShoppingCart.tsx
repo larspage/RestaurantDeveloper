@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useCart } from '@/context/CartContext';
+import { useCart } from '../context/CartContext';
 import CustomerInfoForm from './CustomerInfoForm';
-import { GuestCustomerInfo } from '@/types/Cart';
-import { OrderPayload } from '@/types/Order';
-import orderService from '@/services/orderService';
+import { GuestCustomerInfo } from '../types/Cart';
+import { OrderPayload } from '../types/Order';
+import orderService from '../services/orderService';
 
 const ShoppingCart: React.FC = () => {
   const { 

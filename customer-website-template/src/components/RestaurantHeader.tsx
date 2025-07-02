@@ -1,5 +1,5 @@
 import React from 'react';
-import { Restaurant } from '@/types/Restaurant';
+import { Restaurant } from '../types/Restaurant';
 
 interface RestaurantHeaderProps {
   restaurant: Restaurant;

@@ -109,6 +109,9 @@ const Navigation = () => {
                       <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         My Restaurants
                       </Link>
+                      <Link href="/dashboard/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Order Management
+                      </Link>
                       <Link href="/account/history" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         Order History
                       </Link>
@@ -187,6 +190,9 @@ const Navigation = () => {
                   </Link>
                   <Link href="/dashboard" className="text-gray-600 hover:text-primary-600">
                     My Restaurants
+                  </Link>
+                  <Link href="/dashboard/orders" className="text-gray-600 hover:text-primary-600">
+                    Order Management
                   </Link>
                   <Link href="/account/history" className="text-gray-600 hover:text-primary-600">
                     Order History

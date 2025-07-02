@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, MenuItem, PricePoint } from '@/types/MenuItem';
+import { Menu, MenuItem, PricePoint } from '../types/MenuItem';
 import MenuSection from './MenuSection';
 
 interface MenuGridProps {

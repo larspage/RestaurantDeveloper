@@ -137,6 +137,11 @@ const Dashboard = () => {
                         Menu
                       </span>
                     </Link>
+                    <Link href={`/dashboard/orders`}>
+                      <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer flex-1">
+                        Orders
+                      </span>
+                    </Link>
                   </div>
                 </div>
               </div>
