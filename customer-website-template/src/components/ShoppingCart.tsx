@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import CustomerInfoForm from './CustomerInfoForm';
 import { GuestCustomerInfo } from '@/types/Cart';
+import { OrderPayload } from '@/types/Order';
+import orderService from '@/services/orderService';
 
 const ShoppingCart: React.FC = () => {
   const { 
@@ -14,7 +16,8 @@ const ShoppingCart: React.FC = () => {
     updateItemQuantity,
     guestInfo,
     setGuestInfo,
-    clearCart
+    clearCart,
+    restaurantId
   } = useCart();
 
   const [showCheckout, setShowCheckout] = useState(false);
@@ -39,25 +42,49 @@ const ShoppingCart: React.FC = () => {
   };
 
   const handlePlaceOrder = async (customerInfo: GuestCustomerInfo) => {
+    if (!restaurantId || cartItems.length === 0) {
+      setError("Cannot place an empty order or restaurant not configured.");
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
 
     try {
       setGuestInfo(customerInfo);
       
-      console.log('Placing order:', {
-        items: cartItems,
-        total: cartTotal,
-        guestInfo: customerInfo
+      const orderItems = cartItems.map(item => {
+        const effectivePrice = item.selectedPricePoint ? item.selectedPricePoint.price : item.price;
+        
+        return {
+          name: item.name,
+          price: effectivePrice,
+          quantity: item.quantity,
+          pricePointName: item.selectedPricePoint?.name,
+        };
       });
 
-      alert('Order placed successfully! (Demo mode)');
+      const payload: OrderPayload = {
+        restaurant_id: restaurantId,
+        items: orderItems,
+        guest_info: {
+          name: customerInfo.name,
+          phone: customerInfo.phone,
+          email: customerInfo.email
+        },
+        special_instructions: customerInfo.specialInstructions
+      };
+
+      const newOrder = await orderService.placeOrder(payload);
       clearCart();
       setShowCheckout(false);
       toggleCart();
+      
+      // Navigate to order confirmation page
+      window.location.href = `/orders/${newOrder._id}`;
     } catch (err: any) {
       console.error('Failed to place order:', err);
-      setError(err.message || 'An unexpected error occurred.');
+      setError(err.response?.data?.message || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
