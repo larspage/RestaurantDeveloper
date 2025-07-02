@@ -9,6 +9,7 @@ import MenuSectionList from '../../../components/MenuSectionList';
 import DeleteConfirmationModal from '../../../components/DeleteConfirmationModal';
 import MenuItemForm from '../../../components/MenuItemForm';
 import ImportPreview from '../../../components/ImportPreview';
+import { parseCsvToMenuItems, downloadCsvTemplate, CsvParseResult } from '../../../utils/csvParser';
 import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
 
 const MenuManagement = () => {
@@ -20,6 +21,10 @@ const MenuManagement = () => {
   const [jsonImportModal, setJsonImportModal] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [csvImportModal, setCsvImportModal] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  const [csvParseResult, setCsvParseResult] = useState<CsvParseResult | null>(null);
   const [importPreview, setImportPreview] = useState<any>(null);
   const [showImportPreview, setShowImportPreview] = useState(false);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
@@ -677,6 +682,70 @@ const MenuManagement = () => {
   const handleCancelImport = () => {
     setShowImportPreview(false);
     setImportPreview(null);
+    setJsonImportModal(false);
+    setCsvImportModal(false);
+    setCsvFile(null);
+    setCsvError(null);
+    setCsvParseResult(null);
+  };
+
+  // CSV Import handlers
+  const handleImportCsv = () => {
+    setCsvImportModal(true);
+  };
+
+  const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setCsvFile(file || null);
+    setCsvError(null);
+    setCsvParseResult(null);
+  };
+
+  const handleCsvImport = async () => {
+    if (!csvFile) {
+      setCsvError('Please select a CSV file');
+      return;
+    }
+
+    try {
+      const csvContent = await csvFile.text();
+      const parseResult = parseCsvToMenuItems(csvContent);
+      
+      setCsvParseResult(parseResult);
+      
+      if (!parseResult.success) {
+        setCsvError(`Failed to parse CSV: ${parseResult.errors.join(', ')}`);
+        return;
+      }
+
+      if (parseResult.warnings.length > 0) {
+        console.warn('CSV Import Warnings:', parseResult.warnings);
+      }
+
+      // Convert parsed CSV data to menu format for preview
+      const menuData = {
+        name: `${restaurant?.name || 'Restaurant'} Menu`,
+        description: 'Imported from CSV',
+        sections: [
+          {
+            name: 'Imported Items',
+            description: 'Items imported from CSV file',
+            items: parseResult.data || []
+          }
+        ]
+      };
+
+      // Show preview
+      setImportPreview(menuData);
+      setShowImportPreview(true);
+      setCsvError(null);
+    } catch (error: any) {
+      setCsvError(`Failed to read CSV file: ${error.message}`);
+    }
+  };
+
+  const handleDownloadCsvTemplate = () => {
+    downloadCsvTemplate();
   };
 
   const handleExportJson = () => {
@@ -829,6 +898,12 @@ const MenuManagement = () => {
             >
               Import JSON
             </button>
+            <button
+              onClick={handleImportCsv}
+              className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded transition-colors"
+            >
+              Import CSV
+            </button>
             {menu && menu.sections.length > 0 && (
               <button
                 onClick={handleExportJson}
@@ -864,6 +939,12 @@ const MenuManagement = () => {
                 className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
               >
                 Import from JSON
+              </button>
+              <button
+                onClick={handleImportCsv}
+                className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+              >
+                Import from CSV
               </button>
             </div>
           </div>
@@ -1062,6 +1143,93 @@ const MenuManagement = () => {
           </div>
         )}
         
+        {/* CSV Import Modal */}
+        {csvImportModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              </div>
+
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    Import Menu from CSV
+                  </h3>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CSV File
+                    </label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleCsvFileChange}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={handleDownloadCsvTemplate}
+                      className="text-orange-600 hover:text-orange-800 text-sm underline"
+                    >
+                      Download CSV Template
+                    </button>
+                  </div>
+
+                  {csvFile && (
+                    <div className="mb-4 p-3 bg-gray-50 rounded">
+                      <p className="text-sm text-gray-700">
+                        <strong>Selected file:</strong> {csvFile.name}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Size: {(csvFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  )}
+
+                  {csvParseResult && csvParseResult.warnings.length > 0 && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                      <p className="text-sm font-medium text-yellow-800 mb-1">Warnings:</p>
+                      <ul className="text-sm text-yellow-700 list-disc list-inside">
+                        {csvParseResult.warnings.map((warning, index) => (
+                          <li key={index}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {csvError && (
+                    <div className="mt-2 text-sm text-red-600">
+                      {csvError}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    type="button"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleCsvImport}
+                    disabled={!csvFile}
+                  >
+                    Preview Import
+                  </button>
+                  <button
+                    type="button"
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                    onClick={() => setCsvImportModal(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Import Preview Modal */}
         <ImportPreview
           isOpen={showImportPreview}
