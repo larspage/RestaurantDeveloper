@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { MenuItem } from '../services/menuService';
+import { MenuItem, MenuItemInput } from '../services/menuService';
 import Image from 'next/image';
 import ImageUploader from './ImageUploader';
 
 type MenuItemFormProps = {
   item: MenuItem;
-  onSave: (updatedItem: Partial<MenuItem>) => void;
+  onSave: (updatedItem: Partial<MenuItemInput>) => void;
   onCancel: () => void;
   isUploading: boolean;
+  uploadProgress?: number;
 };
 
 const MenuItemForm: React.FC<MenuItemFormProps> = ({
   item,
   onSave,
   onCancel,
-  isUploading
+  isUploading,
+  uploadProgress = 0
 }) => {
   const [name, setName] = useState(item.name);
   const [description, setDescription] = useState(item.description);
@@ -39,7 +41,7 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    const updatedItem: Partial<MenuItem> = {
+    const updatedItem: Partial<MenuItemInput> = {
       name,
       description,
       price: parseFloat(price),
@@ -148,11 +150,11 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
           <div className="w-full bg-gray-200 rounded-full h-2.5">
             <div 
               className="bg-blue-600 h-2.5 rounded-full" 
-              style={{ width: `${item.imageUploadProgress || 0}%` }}
+              style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Uploading: {item.imageUploadProgress || 0}%
+            Uploading: {uploadProgress}%
           </p>
         </div>
       )}

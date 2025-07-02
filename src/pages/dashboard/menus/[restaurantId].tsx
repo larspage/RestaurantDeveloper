@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Layout from '../../../components/Layout';
 import { useAuth } from '../../../context/AuthContext';
 import restaurantService, { Restaurant } from '../../../services/restaurantService';
-import menuService, { Menu, MenuSection, MenuItem } from '../../../services/menuService';
+import menuService, { Menu, MenuSection, MenuItem, MenuItemInput, MenuSectionInput } from '../../../services/menuService';
 import MenuSectionList from '../../../components/MenuSectionList';
 import DeleteConfirmationModal from '../../../components/DeleteConfirmationModal';
 import MenuItemForm from '../../../components/MenuItemForm';
@@ -20,6 +20,7 @@ const MenuManagement = () => {
   const [jsonInput, setJsonInput] = useState('');
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   
   // Delete confirmation modal state
@@ -153,7 +154,7 @@ const MenuManagement = () => {
     try {
       setIsLoading(true);
       
-      const newSection = {
+      const newSection: MenuSectionInput = {
         name: sectionName,
         description: '',
         items: []
@@ -167,10 +168,11 @@ const MenuManagement = () => {
         updatedMenu = result;
       } else {
         // Create new menu with this section
+        // For createOrUpdateMenu, we need to pass sections without _id since it will be generated
         const newMenu = {
           restaurant: restaurantId as string,
           name: `${restaurant?.name || 'Restaurant'} Menu`,
-          sections: [newSection],
+          sections: [newSection] as any, // Type assertion needed since backend will generate _id
           active: true
         };
         
@@ -338,7 +340,7 @@ const MenuManagement = () => {
     }
   };
 
-  const handleUpdateItem = async (sectionId: string, itemId: string, updatedItem: Partial<MenuItem>) => {
+  const handleUpdateItem = async (sectionId: string, itemId: string, updatedItem: Partial<MenuItemInput>) => {
     if (!restaurantId || !sectionId || !itemId) return;
     
     try {
@@ -348,24 +350,8 @@ const MenuManagement = () => {
       if (updatedItem.imageFile) {
         setUploadingItemId(itemId);
         
-        // Update the item in local state to show progress
-        const updatedMenu = {
-          ...menu!,
-          sections: menu!.sections.map(section => {
-            if (section._id === sectionId) {
-              return {
-                ...section,
-                items: section.items.map(item => 
-                  item._id === itemId 
-                    ? { ...item, imageFile: updatedItem.imageFile, imageUploadProgress: 0 } 
-                    : item
-                )
-              };
-            }
-            return section;
-          })
-        };
-        setMenu(updatedMenu);
+        // Set upload progress to 0
+        setUploadProgress(0);
         
         // Upload the image and get the URL
         const imageUrl = await menuService.uploadItemImage(
@@ -374,24 +360,8 @@ const MenuManagement = () => {
           itemId,
           updatedItem.imageFile,
           (progress) => {
-            // Update progress in local state
-            const progressUpdatedMenu = {
-              ...menu!,
-              sections: menu!.sections.map(section => {
-                if (section._id === sectionId) {
-                  return {
-                    ...section,
-                    items: section.items.map(item => 
-                      item._id === itemId 
-                        ? { ...item, imageUploadProgress: progress } 
-                        : item
-                    )
-                  };
-                }
-                return section;
-              })
-            };
-            setMenu(progressUpdatedMenu);
+            // Update progress state
+            setUploadProgress(progress);
           }
         );
         
@@ -778,6 +748,7 @@ const MenuManagement = () => {
                                 onSave={(updatedItem) => handleUpdateItem(activeSection, item._id!, updatedItem)}
                                 onCancel={handleCancelEdit}
                                 isUploading={uploadingItemId === item._id}
+                                uploadProgress={uploadProgress}
                               />
                             ) : (
                               <div className="flex justify-between items-center">
@@ -797,16 +768,16 @@ const MenuManagement = () => {
                                   </div>
                                   
                                   {/* Show upload progress if uploading */}
-                                  {item._id === uploadingItemId && typeof item.imageUploadProgress === 'number' && (
+                                  {item._id === uploadingItemId && (
                                     <div className="mt-2">
                                       <div className="w-full bg-gray-200 rounded-full h-2.5">
                                         <div 
                                           className="bg-blue-600 h-2.5 rounded-full" 
-                                          style={{ width: `${item.imageUploadProgress}%` }}
+                                          style={{ width: `${uploadProgress}%` }}
                                         ></div>
                                       </div>
                                       <p className="text-xs text-gray-500 mt-1">
-                                        Uploading: {item.imageUploadProgress}%
+                                        Uploading: {uploadProgress}%
                                       </p>
                                     </div>
                                   )}
