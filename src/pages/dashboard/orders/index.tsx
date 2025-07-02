@@ -155,7 +155,7 @@ const OrderDashboard = () => {
                 {restaurants.map((restaurant) => (
                   <button
                     key={restaurant._id}
-                    onClick={() => setSelectedRestaurant(restaurant._id)}
+                    onClick={() => setSelectedRestaurant(restaurant._id || '')}
                     className="w-full p-4 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
                   >
                     <h3 className="font-medium text-gray-900">{restaurant.name}</h3>
