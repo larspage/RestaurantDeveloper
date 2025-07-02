@@ -459,6 +459,56 @@ const MenuManagement = () => {
     setJsonError(null);
   };
 
+  const validatePricePoints = (pricePoints: any[], itemName: string, sectionName: string): boolean => {
+    if (!Array.isArray(pricePoints)) {
+      setJsonError(`Item "${itemName}" in section "${sectionName}" has invalid pricePoints - must be an array`);
+      return false;
+    }
+    
+    if (pricePoints.length === 0) {
+      setJsonError(`Item "${itemName}" in section "${sectionName}" has empty pricePoints array - at least one price point is required`);
+      return false;
+    }
+    
+    const pricePointNames = new Set();
+    
+    for (let i = 0; i < pricePoints.length; i++) {
+      const pricePoint = pricePoints[i];
+      
+      // Validate price point name
+      if (!pricePoint.name || typeof pricePoint.name !== 'string') {
+        setJsonError(`Item "${itemName}" price point ${i + 1} is missing a valid name`);
+        return false;
+      }
+      
+      // Check for duplicate price point names
+      if (pricePointNames.has(pricePoint.name)) {
+        setJsonError(`Item "${itemName}" has duplicate price point name: "${pricePoint.name}"`);
+        return false;
+      }
+      pricePointNames.add(pricePoint.name);
+      
+      // Validate price point price
+      if (typeof pricePoint.price !== 'number' || pricePoint.price < 0) {
+        setJsonError(`Item "${itemName}" price point "${pricePoint.name}" must have a valid positive price`);
+        return false;
+      }
+      
+      // Validate price point id (generate if missing)
+      if (!pricePoint.id) {
+        pricePoint.id = pricePoint.name.toLowerCase().replace(/\s+/g, '-');
+      }
+      
+      // Validate isDefault if present
+      if (pricePoint.isDefault !== undefined && typeof pricePoint.isDefault !== 'boolean') {
+        setJsonError(`Item "${itemName}" price point "${pricePoint.name}" isDefault must be a boolean`);
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
   const validateMenuJson = (json: any): boolean => {
     // Basic validation
     if (!json) return false;
@@ -488,8 +538,28 @@ const MenuManagement = () => {
           return false;
         }
         
-        if (typeof item.price !== 'number') {
-          setJsonError(`Item "${item.name}" must have a numeric price`);
+        // Validate base price (required for backward compatibility)
+        if (typeof item.price !== 'number' || item.price < 0) {
+          setJsonError(`Item "${item.name}" must have a valid positive base price`);
+          return false;
+        }
+        
+        // Validate price points if present
+        if (item.pricePoints) {
+          if (!validatePricePoints(item.pricePoints, item.name, section.name)) {
+            return false;
+          }
+        }
+        
+        // Validate available field if present
+        if (item.available !== undefined && typeof item.available !== 'boolean') {
+          setJsonError(`Item "${item.name}" available field must be a boolean`);
+          return false;
+        }
+        
+        // Validate modifications array if present
+        if (item.modifications && !Array.isArray(item.modifications)) {
+          setJsonError(`Item "${item.name}" modifications must be an array`);
           return false;
         }
       }
@@ -520,6 +590,7 @@ const MenuManagement = () => {
             name: item.name,
             description: item.description || '',
             price: item.price,
+            pricePoints: item.pricePoints || undefined, // Include price points if present
             category: item.category || '',
             available: item.available !== undefined ? item.available : true,
             modifications: item.modifications || []

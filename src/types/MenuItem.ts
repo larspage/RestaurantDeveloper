@@ -1,9 +1,18 @@
+// Interface for price points (Small/Medium/Large, Regular/Premium, etc.)
+export interface PricePoint {
+  id: string;
+  name: string; // "Small", "Medium", "Large", "Regular", "Premium"
+  price: number;
+  isDefault?: boolean;
+}
+
 // Interface for existing menu items from database (always have _id)
 export interface MenuItem {
   _id: string;
   name: string;
   description?: string;
-  price: number;
+  price: number; // Keep for backward compatibility - represents base/default price
+  pricePoints?: PricePoint[]; // Optional array of price points
   available: boolean;
   category?: string;
   customizations?: string[];
@@ -17,7 +26,8 @@ export interface MenuItemInput {
   _id?: string;
   name: string;
   description?: string;
-  price: number;
+  price: number; // Keep for backward compatibility - represents base/default price
+  pricePoints?: PricePoint[]; // Optional array of price points
   available?: boolean;
   category?: string;
   customizations?: string[];

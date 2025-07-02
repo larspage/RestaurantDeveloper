@@ -82,10 +82,20 @@
    - ✅ Add item modification options
    - ✅ Implement item availability toggle with visual indicator
 
-3. **JSON Import/Export Enhancements**
-   - ⏳ Add schema validation with detailed error messages
-   - ⏳ Implement preview functionality before import
-   - ⏳ Add support for importing from various formats (CSV, etc.)
+3. **JSON Import/Export Enhancements with Price Points Support**
+   - 📋 **PLANNED**: Comprehensive enhancement documented in `docs/json_import_export_price_points_plan.md`
+   - ⏳ **Phase 1 - Foundation (2 days)**:
+     - ✅ Task 1: Price Points Data Structure (Level 1 - 1 day) - COMPLETED
+     - ✅ Task 2: Basic JSON Schema Validation (Level 1 - 1 day) - COMPLETED
+   - ⏳ **Phase 2 - Import/Export (2.5 days)**:
+     - Task 3: JSON Import Price Points Support (Level 1 - 1 day)
+     - Task 4: JSON Export Price Points Support (Level 1 - 0.5 day)
+     - Task 5: Basic Import Preview (Level 1 - 1 day)
+   - ⏳ **Phase 3 - Integration (2 days)**:
+     - Task 6: Shopping Cart Price Point Integration (Level 1 - 1 day)
+     - Task 7: Menu Display Price Point Selection (Level 1 - 1 day)
+   - ⏳ **Phase 4 - Enhancement (1 day)**:
+     - Task 8: CSV Import Basic Support (Level 1 - 1 day)
 
 #### Priority 2: Integration Testing
 1. **End-to-End Tests**
@@ -146,9 +156,57 @@ The menu management UI has been enhanced with:
 - Edge case testing for invalid inputs
 - Integration tests for frontend-backend communication
 
-## Complexity Level: Level 3
-This implementation requires comprehensive planning and phased implementation due to:
+## JSON Import/Export with Price Points Enhancement
+
+### Project Overview
+This enhancement adds support for multiple price points per menu item (Small/Medium/Large, Regular/Premium, etc.) while improving the JSON import/export functionality. The project has been broken down into Level 1 complexity tasks for manageable implementation.
+
+### Current Progress Summary ✅
+**PHASE 1 FOUNDATION - COMPLETED (2/2 tasks)**
+- ✅ **Task 1**: Price Points Data Structure - Added PricePoint interface and enhanced MenuItem types
+- ✅ **Task 2**: Basic JSON Schema Validation - Comprehensive validation with detailed error messages
+
+**ACHIEVEMENTS**:
+- ✅ Full TypeScript type safety for price points
+- ✅ Backward compatibility maintained (all existing code works)
+- ✅ Robust validation system with clear error messages
+- ✅ Auto-generation of price point IDs
+- ✅ All existing tests pass
+- ✅ Ready for import/export implementation
+
+**NEXT MILESTONE**: Phase 2 - Import/Export (Tasks 3-5)
+
+### Key Features Being Added
+- **Multiple Price Points**: Menu items can have multiple pricing options
+- **Enhanced Import/Export**: Improved JSON handling with price points support
+- **Import Preview**: Show changes before applying imports
+- **CSV Support**: Basic CSV import functionality
+- **Shopping Cart Integration**: Handle price point selection in cart
+- **Backward Compatibility**: Existing single-price items continue to work
+
+### Implementation Approach
+The project uses a **Level 1 task breakdown strategy**:
+- Each task has a single, clear objective
+- Simple implementation with minimal complexity
+- Independent tasks that can be completed individually
+- Clear success criteria and testable outcomes
+- Low risk with minimal impact on existing functionality
+
+### Total Estimated Timeline: 7.5 days
+- ✅ **Phase 1**: Foundation (2 days) - COMPLETED
+- ⏳ **Phase 2**: Import/Export (2.5 days) - READY TO START
+- ⏳ **Phase 3**: Integration (2 days) - PENDING
+- ⏳ **Phase 4**: Enhancement (1 day) - PENDING
+
+### Documentation
+Comprehensive planning and implementation details are documented in:
+- `docs/json_import_export_price_points_plan.md`
+
+## Original Complexity Assessment: Level 3
+The overall menu management implementation was Level 3 complexity due to:
 - Complex UI interactions (drag and drop, image uploads)
 - Data validation requirements
 - Performance considerations for large menus
-- Integration with multiple backend endpoints 
+- Integration with multiple backend endpoints
+
+**Current Status**: Level 3 implementation completed and production-ready ✅ 
