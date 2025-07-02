@@ -7,6 +7,9 @@ interface OrderFiltersProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   orderCount: number;
+  showSelectAll?: boolean;
+  onSelectAll?: () => void;
+  selectedCount?: number;
 }
 
 const OrderFilters: React.FC<OrderFiltersProps> = ({
@@ -14,7 +17,10 @@ const OrderFilters: React.FC<OrderFiltersProps> = ({
   onStatusChange,
   searchQuery,
   onSearchChange,
-  orderCount
+  orderCount,
+  showSelectAll = false,
+  onSelectAll,
+  selectedCount = 0
 }) => {
   const statusOptions = [
     { value: 'all', label: 'All Orders', count: 0 },
@@ -47,9 +53,22 @@ const OrderFilters: React.FC<OrderFiltersProps> = ({
 
         {/* Search and Count */}
         <div className="flex items-center gap-4">
+          {/* Select All Button */}
+          {showSelectAll && onSelectAll && (
+            <button
+              onClick={onSelectAll}
+              className="px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+            >
+              Select All ({orderCount})
+            </button>
+          )}
+
           {/* Order Count */}
           <span className="text-sm text-gray-600 whitespace-nowrap">
-            {orderCount} order{orderCount !== 1 ? 's' : ''}
+            {showSelectAll && selectedCount > 0 
+              ? `${selectedCount} of ${orderCount} selected` 
+              : `${orderCount} order${orderCount !== 1 ? 's' : ''}`
+            }
           </span>
 
           {/* Search Input */}

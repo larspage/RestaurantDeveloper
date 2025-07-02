@@ -6,6 +6,10 @@ import orderService, { Order, OrderStatus } from '../../../services/orderService
 import restaurantService, { Restaurant } from '../../../services/restaurantService';
 import OrderCard from '../../../components/OrderCard';
 import OrderFilters from '../../../components/OrderFilters';
+import BulkOrderActions from '../../../components/BulkOrderActions';
+import StatusUpdateModal from '../../../components/StatusUpdateModal';
+import OrderCancellation from '../../../components/OrderCancellation';
+import NotificationToast, { useNotifications } from '../../../components/NotificationToast';
 
 const OrderDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -17,8 +21,20 @@ const OrderDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Selection and bulk operations
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [showBulkSelection, setShowBulkSelection] = useState(false);
+
+  // Modal states
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showCancellationModal, setShowCancellationModal] = useState(false);
+  const [modalOrderId, setModalOrderId] = useState<string>('');
+  const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
+
   const { user } = useAuth();
   const router = useRouter();
+  const { notifications, addNotification, removeNotification } = useNotifications();
 
   // Load user's restaurants on component mount
   useEffect(() => {
@@ -56,10 +72,18 @@ const OrderDashboard = () => {
         const data = await orderService.getRestaurantActiveOrders(selectedRestaurant);
         setOrders(data);
         setError(null);
+        
+        // Clear selection when restaurant changes
+        setSelectedOrders([]);
       } catch (err: any) {
         console.error('Failed to fetch orders:', err);
         setError(err.response?.data?.message || 'Failed to load orders. Please try again.');
         setOrders([]);
+        addNotification({
+          type: 'error',
+          title: 'Failed to load orders',
+          message: err.response?.data?.message || 'Please try again.'
+        });
       } finally {
         setIsLoading(false);
       }
@@ -95,8 +119,12 @@ const OrderDashboard = () => {
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     setFilteredOrders(filtered);
+    
+    // Clear selection if filtered orders no longer include selected orders
+    setSelectedOrders(prev => prev.filter(id => filtered.some(order => order._id === id)));
   }, [orders, selectedStatus, searchQuery]);
 
+  // Individual order status update
   const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
     try {
       setIsUpdating(true);
@@ -108,11 +136,199 @@ const OrderDashboard = () => {
           order._id === orderId ? { ...order, status: newStatus } : order
         )
       );
+
+      addNotification({
+        type: 'success',
+        title: 'Order updated',
+        message: `Order #${orderId.slice(-8).toUpperCase()} status changed to ${newStatus.replace('_', ' ')}.`
+      });
     } catch (err: any) {
       console.error('Failed to update order status:', err);
       setError(err.response?.data?.message || 'Failed to update order status.');
+      addNotification({
+        type: 'error',
+        title: 'Update failed',
+        message: err.response?.data?.message || 'Failed to update order status.'
+      });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  // Enhanced status update with modal
+  const handleEnhancedStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
+    setModalOrderId(orderId);
+    setPendingStatus(newStatus);
+    
+    if (newStatus === 'cancelled') {
+      setShowCancellationModal(true);
+    } else {
+      setShowStatusModal(true);
+    }
+  };
+
+  // Bulk status update
+  const handleBulkStatusUpdate = async (orderIds: string[], newStatus: OrderStatus, estimatedTime?: string, reason?: string) => {
+    try {
+      setIsUpdating(true);
+      
+      if (newStatus === 'cancelled') {
+        const result = await orderService.bulkCancelOrders(orderIds, reason || 'Bulk cancellation');
+        
+        // Update local state
+        setOrders(prevOrders =>
+          prevOrders.map(order =>
+            result.cancelled.some(cancelledOrder => cancelledOrder._id === order._id)
+              ? { ...order, status: 'cancelled' }
+              : order
+          )
+        );
+
+        addNotification({
+          type: 'success',
+          title: 'Orders cancelled',
+          message: `Successfully cancelled ${result.cancelled.length} order${result.cancelled.length !== 1 ? 's' : ''}.`
+        });
+
+        if (result.failed.length > 0) {
+          addNotification({
+            type: 'warning',
+            title: 'Some orders failed',
+            message: `${result.failed.length} order${result.failed.length !== 1 ? 's' : ''} could not be cancelled.`
+          });
+        }
+      } else {
+        const result = await orderService.bulkUpdateOrderStatus(orderIds, newStatus, estimatedTime, reason);
+        
+        // Update local state
+        setOrders(prevOrders =>
+          prevOrders.map(order =>
+            result.updated.some(updatedOrder => updatedOrder._id === order._id)
+              ? { ...order, status: newStatus }
+              : order
+          )
+        );
+
+        addNotification({
+          type: 'success',
+          title: 'Orders updated',
+          message: `Successfully updated ${result.updated.length} order${result.updated.length !== 1 ? 's' : ''} to ${newStatus.replace('_', ' ')}.`
+        });
+
+        if (result.failed.length > 0) {
+          addNotification({
+            type: 'warning',
+            title: 'Some orders failed',
+            message: `${result.failed.length} order${result.failed.length !== 1 ? 's' : ''} could not be updated.`
+          });
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to bulk update orders:', err);
+      addNotification({
+        type: 'error',
+        title: 'Bulk update failed',
+        message: err.response?.data?.message || 'Failed to update orders.'
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Modal handlers
+  const handleModalConfirm = async (estimatedTime?: string, reason?: string) => {
+    if (!modalOrderId || !pendingStatus) return;
+
+    try {
+      setIsUpdating(true);
+      await orderService.updateOrderStatus(modalOrderId, pendingStatus, estimatedTime, reason);
+      
+      // Update the order in the local state
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === modalOrderId ? { ...order, status: pendingStatus } : order
+        )
+      );
+
+      addNotification({
+        type: 'success',
+        title: 'Order updated',
+        message: `Order #${modalOrderId.slice(-8).toUpperCase()} status changed to ${pendingStatus.replace('_', ' ')}.`
+      });
+
+      setShowStatusModal(false);
+      setModalOrderId('');
+      setPendingStatus(null);
+    } catch (err: any) {
+      console.error('Failed to update order status:', err);
+      addNotification({
+        type: 'error',
+        title: 'Update failed',
+        message: err.response?.data?.message || 'Failed to update order status.'
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCancellationConfirm = async (reason: string) => {
+    if (!modalOrderId) return;
+
+    try {
+      setIsUpdating(true);
+      await orderService.cancelOrder(modalOrderId, reason);
+      
+      // Update the order in the local state
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === modalOrderId ? { ...order, status: 'cancelled' } : order
+        )
+      );
+
+      addNotification({
+        type: 'success',
+        title: 'Order cancelled',
+        message: `Order #${modalOrderId.slice(-8).toUpperCase()} has been cancelled.`
+      });
+
+      setShowCancellationModal(false);
+      setModalOrderId('');
+    } catch (err: any) {
+      console.error('Failed to cancel order:', err);
+      addNotification({
+        type: 'error',
+        title: 'Cancellation failed',
+        message: err.response?.data?.message || 'Failed to cancel order.'
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Selection handlers
+  const handleOrderSelect = (orderId: string, selected: boolean) => {
+    setSelectedOrders(prev => {
+      if (selected) {
+        return [...prev, orderId];
+      } else {
+        return prev.filter(id => id !== orderId);
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    const allOrderIds = filteredOrders.map(order => order._id);
+    setSelectedOrders(allOrderIds);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedOrders([]);
+  };
+
+  const toggleBulkSelection = () => {
+    setShowBulkSelection(!showBulkSelection);
+    if (showBulkSelection) {
+      setSelectedOrders([]);
     }
   };
 
@@ -139,6 +355,10 @@ const OrderDashboard = () => {
   const getSelectedRestaurantName = () => {
     const restaurant = restaurants.find(r => r._id === selectedRestaurant);
     return restaurant?.name || 'Select Restaurant';
+  };
+
+  const getSelectedOrdersData = () => {
+    return orders.filter(order => selectedOrders.includes(order._id));
   };
 
   // Show restaurant selection if no restaurant selected
@@ -205,9 +425,23 @@ const OrderDashboard = () => {
             <p className="text-gray-600 mt-1">Managing orders for {getSelectedRestaurantName()}</p>
           </div>
           
-          {/* Restaurant Selector */}
-          {restaurants.length > 1 && (
-            <div className="mt-4 sm:mt-0">
+          <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+            {/* Bulk Selection Toggle */}
+            {filteredOrders.length > 0 && (
+              <button
+                onClick={toggleBulkSelection}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  showBulkSelection
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {showBulkSelection ? 'Exit Bulk Mode' : 'Bulk Actions'}
+              </button>
+            )}
+
+            {/* Restaurant Selector */}
+            {restaurants.length > 1 && (
               <select
                 value={selectedRestaurant}
                 onChange={(e) => setSelectedRestaurant(e.target.value)}
@@ -219,8 +453,8 @@ const OrderDashboard = () => {
                   </option>
                 ))}
               </select>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Error Message */}
@@ -230,6 +464,16 @@ const OrderDashboard = () => {
           </div>
         )}
 
+        {/* Bulk Actions Bar */}
+        {showBulkSelection && (
+          <BulkOrderActions
+            selectedOrders={getSelectedOrdersData()}
+            onStatusUpdate={handleBulkStatusUpdate}
+            onClearSelection={handleClearSelection}
+            isUpdating={isUpdating}
+          />
+        )}
+
         {/* Filters */}
         <OrderFilters
           selectedStatus={selectedStatus}
@@ -237,6 +481,9 @@ const OrderDashboard = () => {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           orderCount={filteredOrders.length}
+          showSelectAll={showBulkSelection && filteredOrders.length > 0}
+          onSelectAll={handleSelectAll}
+          selectedCount={selectedOrders.length}
         />
 
         {/* Loading State */}
@@ -280,8 +527,11 @@ const OrderDashboard = () => {
               <OrderCard
                 key={order._id}
                 order={order}
-                onStatusUpdate={handleStatusUpdate}
+                onStatusUpdate={handleEnhancedStatusUpdate}
                 isUpdating={isUpdating}
+                isSelected={selectedOrders.includes(order._id)}
+                onSelect={handleOrderSelect}
+                showSelection={showBulkSelection}
               />
             ))}
           </div>
@@ -311,6 +561,42 @@ const OrderDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Modals */}
+        {showStatusModal && modalOrderId && pendingStatus && (
+          <StatusUpdateModal
+            isOpen={showStatusModal}
+            onClose={() => {
+              setShowStatusModal(false);
+              setModalOrderId('');
+              setPendingStatus(null);
+            }}
+            onConfirm={handleModalConfirm}
+            currentStatus={orders.find(o => o._id === modalOrderId)?.status as OrderStatus}
+            newStatus={pendingStatus}
+            orderNumber={modalOrderId.slice(-8).toUpperCase()}
+            isLoading={isUpdating}
+          />
+        )}
+
+        {showCancellationModal && modalOrderId && (
+          <OrderCancellation
+            order={orders.find(o => o._id === modalOrderId)!}
+            isOpen={showCancellationModal}
+            onClose={() => {
+              setShowCancellationModal(false);
+              setModalOrderId('');
+            }}
+            onConfirm={handleCancellationConfirm}
+            isLoading={isUpdating}
+          />
+        )}
+
+        {/* Notifications */}
+        <NotificationToast
+          notifications={notifications}
+          onRemove={removeNotification}
+        />
       </div>
     </Layout>
   );

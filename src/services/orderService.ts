@@ -71,21 +71,62 @@ const orderService = {
     return response.data;
   },
 
-  updateOrderStatus: async (orderId: string, status: OrderStatus, estimatedReadyTime?: string): Promise<Order> => {
+  updateOrderStatus: async (orderId: string, status: OrderStatus, estimatedTime?: string, reason?: string): Promise<Order> => {
     const payload: any = { status };
-    if (estimatedReadyTime) {
-      payload.estimated_ready_time = estimatedReadyTime;
+    if (estimatedTime) {
+      payload.estimated_time = estimatedTime;
+    }
+    if (reason) {
+      payload.reason = reason;
     }
     const response = await api.patch(`/orders/${orderId}/status`, payload);
     return response.data;
   },
 
-  cancelOrder: async (orderId: string, reason?: string): Promise<Order> => {
-    const payload: any = {};
+  // Bulk status update for multiple orders
+  bulkUpdateOrderStatus: async (orderIds: string[], status: OrderStatus, estimatedTime?: string, reason?: string): Promise<{ updated: Order[], failed: string[] }> => {
+    const payload: any = { 
+      order_ids: orderIds,
+      status 
+    };
+    if (estimatedTime) {
+      payload.estimated_time = estimatedTime;
+    }
     if (reason) {
       payload.reason = reason;
     }
-    const response = await api.post(`/orders/${orderId}/cancel`, payload);
+    const response = await api.patch('/orders/bulk/status', payload);
+    return response.data;
+  },
+
+  cancelOrder: async (orderId: string, reason?: string): Promise<Order> => {
+    const payload: any = { status: 'cancelled' };
+    if (reason) {
+      payload.reason = reason;
+    }
+    const response = await api.patch(`/orders/${orderId}/status`, payload);
+    return response.data;
+  },
+
+  // Bulk cancel multiple orders
+  bulkCancelOrders: async (orderIds: string[], reason: string): Promise<{ cancelled: Order[], failed: string[] }> => {
+    const payload = {
+      order_ids: orderIds,
+      status: 'cancelled',
+      reason
+    };
+    const response = await api.patch('/orders/bulk/status', payload);
+    return response.data;
+  },
+
+  // Get order statistics for dashboard
+  getOrderStats: async (restaurantId: string): Promise<{
+    total: number;
+    by_status: Record<OrderStatus, number>;
+    today_total: number;
+    today_revenue: number;
+  }> => {
+    const response = await api.get(`/orders/restaurant/${restaurantId}/stats`);
     return response.data;
   },
 };

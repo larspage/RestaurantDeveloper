@@ -10,6 +10,9 @@ import OrderTimeline from '../../../components/OrderTimeline';
 import OrderItemList from '../../../components/OrderItemList';
 import CustomerInfo from '../../../components/CustomerInfo';
 import PrintOrderButton from '../../../components/PrintOrderButton';
+import StatusUpdateModal from '../../../components/StatusUpdateModal';
+import OrderCancellation from '../../../components/OrderCancellation';
+import NotificationToast, { useNotifications } from '../../../components/NotificationToast';
 
 const OrderDetailView = () => {
   const [order, setOrder] = useState<Order | null>(null);
@@ -17,9 +20,16 @@ const OrderDetailView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Modal states for enhanced status management
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showCancellationModal, setShowCancellationModal] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
+  
   const { user } = useAuth();
   const router = useRouter();
   const { orderId } = router.query;
+  const { notifications, addNotification, removeNotification } = useNotifications();
 
   useEffect(() => {
     const fetchOrderAndRestaurant = async () => {
@@ -48,30 +58,68 @@ const OrderDetailView = () => {
   }, [orderId]);
 
   const handleStatusUpdate = async (newStatus: OrderStatus) => {
-    if (!order) return;
+    setPendingStatus(newStatus);
+    
+    if (newStatus === 'cancelled') {
+      setShowCancellationModal(true);
+    } else {
+      setShowStatusModal(true);
+    }
+  };
+
+  // Enhanced status update with modal confirmation
+  const handleModalConfirm = async (estimatedTime?: string, reason?: string) => {
+    if (!order || !pendingStatus) return;
 
     try {
       setIsUpdating(true);
-      const updatedOrder = await orderService.updateOrderStatus(order._id, newStatus);
+      const updatedOrder = await orderService.updateOrderStatus(order._id, pendingStatus, estimatedTime, reason);
       setOrder(updatedOrder);
+      
+      addNotification({
+        type: 'success',
+        title: 'Order updated',
+        message: `Order status changed to ${pendingStatus.replace('_', ' ')}.`
+      });
+
+      setShowStatusModal(false);
+      setPendingStatus(null);
     } catch (err: any) {
       console.error('Failed to update order status:', err);
       setError(err.response?.data?.message || 'Failed to update order status.');
+      addNotification({
+        type: 'error',
+        title: 'Update failed',
+        message: err.response?.data?.message || 'Failed to update order status.'
+      });
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const handleCancelOrder = async (reason?: string) => {
+  const handleCancelOrder = async (reason: string) => {
     if (!order) return;
 
     try {
       setIsUpdating(true);
       const updatedOrder = await orderService.cancelOrder(order._id, reason);
       setOrder(updatedOrder);
+      
+      addNotification({
+        type: 'success',
+        title: 'Order cancelled',
+        message: 'Order has been successfully cancelled.'
+      });
+
+      setShowCancellationModal(false);
     } catch (err: any) {
       console.error('Failed to cancel order:', err);
       setError(err.response?.data?.message || 'Failed to cancel order.');
+      addNotification({
+        type: 'error',
+        title: 'Cancellation failed',
+        message: err.response?.data?.message || 'Failed to cancel order.'
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -271,7 +319,7 @@ const OrderDetailView = () => {
                 {/* Cancel Order Button */}
                 {canCancelOrder(order.status as OrderStatus) && (
                   <button
-                    onClick={() => handleCancelOrder('Cancelled by restaurant')}
+                    onClick={() => handleStatusUpdate('cancelled')}
                     disabled={isUpdating}
                     className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white py-2 px-4 rounded-md font-medium transition-colors"
                   >
@@ -323,6 +371,38 @@ const OrderDetailView = () => {
             </div>
           </div>
         </div>
+
+        {/* Modals */}
+        {showStatusModal && order && pendingStatus && (
+          <StatusUpdateModal
+            isOpen={showStatusModal}
+            onClose={() => {
+              setShowStatusModal(false);
+              setPendingStatus(null);
+            }}
+            onConfirm={handleModalConfirm}
+            currentStatus={order.status as OrderStatus}
+            newStatus={pendingStatus}
+            orderNumber={order._id.slice(-8).toUpperCase()}
+            isLoading={isUpdating}
+          />
+        )}
+
+        {showCancellationModal && order && (
+          <OrderCancellation
+            order={order}
+            isOpen={showCancellationModal}
+            onClose={() => setShowCancellationModal(false)}
+            onConfirm={handleCancelOrder}
+            isLoading={isUpdating}
+          />
+        )}
+
+        {/* Notifications */}
+        <NotificationToast
+          notifications={notifications}
+          onRemove={removeNotification}
+        />
       </div>
     </Layout>
   );

@@ -7,9 +7,19 @@ interface OrderCardProps {
   order: Order;
   onStatusUpdate: (orderId: string, newStatus: OrderStatus) => Promise<void>;
   isUpdating?: boolean;
+  isSelected?: boolean;
+  onSelect?: (orderId: string, selected: boolean) => void;
+  showSelection?: boolean;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdate, isUpdating = false }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ 
+  order, 
+  onStatusUpdate, 
+  isUpdating = false,
+  isSelected = false,
+  onSelect,
+  showSelection = false
+}) => {
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
 
   const formatTime = (dateString: string) => {
@@ -116,17 +126,35 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onStatusUpdate, isUpdating
     }
   };
 
+  const handleSelectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onSelect) {
+      onSelect(order._id, e.target.checked);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+    <div className={`bg-white rounded-lg shadow-md border p-6 hover:shadow-lg transition-all ${
+      isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'
+    }`}>
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Order #{order._id.slice(-8).toUpperCase()}
-          </h3>
-          <p className="text-sm text-gray-500">
-            {formatDate(order.createdAt)} at {formatTime(order.createdAt)} • {getElapsedTime()}
-          </p>
+        <div className="flex items-start space-x-3">
+          {showSelection && onSelect && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={handleSelectChange}
+              className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+          )}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Order #{order._id.slice(-8).toUpperCase()}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {formatDate(order.createdAt)} at {formatTime(order.createdAt)} • {getElapsedTime()}
+            </p>
+          </div>
         </div>
         <OrderStatusBadge status={order.status as OrderStatus} />
       </div>
