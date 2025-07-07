@@ -171,6 +171,45 @@ const restaurantSchema = new mongoose.Schema({
         include_restaurant_logo: { type: Boolean, default: true },
         include_order_tracking: { type: Boolean, default: false }
       }
+    },
+    // Notification Settings
+    notification_settings: {
+      // Email Notifications
+      email_notifications: {
+        enabled: { type: Boolean, default: true },
+        new_orders: { type: Boolean, default: true },
+        order_updates: { type: Boolean, default: true },
+        order_cancelled: { type: Boolean, default: true },
+        daily_summary: { type: Boolean, default: false },
+        weekly_report: { type: Boolean, default: false },
+        system_alerts: { type: Boolean, default: true }
+      },
+      // SMS Notifications
+      sms_notifications: {
+        enabled: { type: Boolean, default: false },
+        new_orders: { type: Boolean, default: false },
+        order_ready: { type: Boolean, default: false },
+        order_cancelled: { type: Boolean, default: false },
+        urgent_alerts: { type: Boolean, default: false }
+      },
+      // Push Notifications
+      push_notifications: {
+        enabled: { type: Boolean, default: true },
+        new_orders: { type: Boolean, default: true },
+        order_updates: { type: Boolean, default: true },
+        system_alerts: { type: Boolean, default: true },
+        marketing_updates: { type: Boolean, default: false }
+      },
+      // Notification Preferences
+      notification_preferences: {
+        email_address: { type: String, trim: true },
+        phone_number: { type: String, trim: true },
+        quiet_hours_enabled: { type: Boolean, default: false },
+        quiet_hours_start: { type: String, default: '22:00' },
+        quiet_hours_end: { type: String, default: '08:00' },
+        notification_sound: { type: Boolean, default: true },
+        notification_frequency: { type: String, enum: ['immediate', 'batched_15min', 'batched_1hour'], default: 'immediate' }
+      }
     }
   }
 }, {
