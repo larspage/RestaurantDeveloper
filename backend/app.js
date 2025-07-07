@@ -52,7 +52,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3550;
 
 // Only start server if not in test mode
 if (process.env.NODE_ENV !== 'test') {

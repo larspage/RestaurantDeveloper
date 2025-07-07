@@ -37,7 +37,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ notification, onRemove }) => {
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    const duration = notification.duration || 5000;
+    const duration = notification.duration || 3550;
     
     const timer = setTimeout(() => {
       setIsExiting(true);

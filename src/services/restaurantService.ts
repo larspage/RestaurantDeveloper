@@ -50,6 +50,17 @@ const restaurantService = {
   deleteRestaurant: async (id: string) => {
     const response = await api.delete(`/restaurants/${id}`);
     return response.data;
+  },
+
+  // Update restaurant settings
+  updateRestaurantSettings: async (restaurantId: string, settings: any) => {
+    try {
+      const response = await api.patch(`/restaurants/${restaurantId}/settings`, { settings });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating restaurant settings:', error);
+      throw new Error(error.response?.data?.message || 'Failed to update restaurant settings');
+    }
   }
 };
 

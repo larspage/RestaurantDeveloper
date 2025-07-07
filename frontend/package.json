@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "cypress run",
+    "test": "cross-env MONGODB_URI_TEST=mongodb://localhost:27017/restaurant_developer_test cypress run",
     "test:dev": "cypress open",
     "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx,css,md}'"
   },

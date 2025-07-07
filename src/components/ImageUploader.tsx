@@ -6,12 +6,14 @@ interface ImageUploaderProps {
   onFileAccepted: (file: File) => void;
   existingImageUrl?: string | null;
   onRemoveImage: () => void;
+  'data-cy'?: string;
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ 
   onFileAccepted, 
   existingImageUrl,
-  onRemoveImage 
+  onRemoveImage,
+  'data-cy': dataCy
 }) => {
   const [preview, setPreview] = useState<string | null>(existingImageUrl || null);
 
@@ -104,7 +106,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   );
 
   return (
-    <div {...getRootProps({ className: 'dropzone' })} data-cy="image-uploader">
+    <div {...getRootProps({ className: 'dropzone' })} data-cy={dataCy}>
       <input {...getInputProps()} />
       {preview ? renderPreview() : renderPlaceholder()}
     </div>

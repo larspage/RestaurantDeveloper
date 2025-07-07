@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { MenuSection } from '../services/menuService';
@@ -12,6 +12,7 @@ type DraggableSectionProps = {
   onDeleteSection: (sectionId: string) => void;
   activeSection: string | null;
   onEditDescription: (sectionId: string, description: string) => void;
+  'data-cy'?: string;
 };
 
 // Type for the section list props
@@ -22,6 +23,7 @@ type MenuSectionListProps = {
   onDeleteSection: (sectionId: string) => void;
   activeSection: string | null;
   onEditDescription: (sectionId: string, description: string) => void;
+  'data-cy'?: string;
 };
 
 // Type for the drag item
@@ -39,7 +41,8 @@ const DraggableSection: React.FC<DraggableSectionProps> = ({
   onSectionClick,
   onDeleteSection,
   activeSection,
-  onEditDescription
+  onEditDescription,
+  'data-cy': dataCy
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [description, setDescription] = useState(section.description || '');
@@ -216,12 +219,13 @@ const MenuSectionList: React.FC<MenuSectionListProps> = ({
   onSectionClick,
   onDeleteSection,
   activeSection,
-  onEditDescription
+  onEditDescription,
+  'data-cy': dataCy
 }) => {
   const [sectionList, setSectionList] = useState<MenuSection[]>(sections);
   
   // Update local state when props change
-  React.useEffect(() => {
+  useEffect(() => {
     setSectionList(sections);
   }, [sections]);
   
@@ -246,22 +250,29 @@ const MenuSectionList: React.FC<MenuSectionListProps> = ({
   
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="bg-white rounded-lg shadow-md p-4">
+      <div className="bg-white rounded-lg shadow-md p-4" data-cy={dataCy}>
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Menu Sections</h2>
-        <ul className="space-y-2">
-          {sectionList.map((section, index) => (
-            <DraggableSection
-              key={section._id}
-              section={section}
-              index={index}
-              moveSection={moveSection}
-              onSectionClick={onSectionClick}
-              onDeleteSection={onDeleteSection}
-              activeSection={activeSection}
-              onEditDescription={onEditDescription}
-            />
-          ))}
-        </ul>
+        
+        {sectionList.length === 0 ? (
+          <div className="text-center text-sm text-gray-600">
+            No sections available
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {sectionList.map((section, index) => (
+              <DraggableSection
+                key={section._id}
+                index={index}
+                section={section}
+                moveSection={moveSection}
+                onSectionClick={onSectionClick}
+                onDeleteSection={onDeleteSection}
+                activeSection={activeSection}
+                onEditDescription={onEditDescription}
+              />
+            ))}
+          </ul>
+        )}
       </div>
     </DndProvider>
   );

@@ -104,6 +104,80 @@ router.patch('/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Update restaurant settings (authenticated owner only)
+router.patch('/:id/settings', authenticateToken, async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.id);
+    
+    // Check if restaurant exists
+    if (!restaurant) {
+      return res.status(404).json({ message: 'Restaurant not found' });
+    }
+
+    // Check if user is the owner
+    if (restaurant.owner.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Only the owner can update this restaurant' });
+    }
+
+    const { settings } = req.body;
+
+    // Update settings if provided
+    if (settings) {
+      // Initialize settings object if it doesn't exist
+      if (!restaurant.settings) {
+        restaurant.settings = {};
+      }
+
+      // Update order management settings
+      if (settings.accept_new_orders !== undefined) {
+        restaurant.settings.accept_new_orders = settings.accept_new_orders;
+      }
+      if (settings.auto_confirm_orders !== undefined) {
+        restaurant.settings.auto_confirm_orders = settings.auto_confirm_orders;
+      }
+      if (settings.show_unavailable_items !== undefined) {
+        restaurant.settings.show_unavailable_items = settings.show_unavailable_items;
+      }
+
+      // Update contact preferences
+      if (settings.contact_preferences) {
+        if (!restaurant.settings.contact_preferences) {
+          restaurant.settings.contact_preferences = {};
+        }
+        Object.assign(restaurant.settings.contact_preferences, settings.contact_preferences);
+      }
+
+      // Update operating hours
+      if (settings.operating_hours) {
+        if (!restaurant.settings.operating_hours) {
+          restaurant.settings.operating_hours = {};
+        }
+        Object.assign(restaurant.settings.operating_hours, settings.operating_hours);
+      }
+
+      // Update basic restaurant info if provided
+      if (settings.name) restaurant.name = settings.name;
+      if (settings.description) restaurant.description = settings.description;
+      if (settings.location) restaurant.location = settings.location;
+      if (settings.contact_info) {
+        if (!restaurant.contact_info) {
+          restaurant.contact_info = {};
+        }
+        Object.assign(restaurant.contact_info, settings.contact_info);
+      }
+    }
+
+    await restaurant.save();
+    res.json({
+      message: 'Restaurant settings updated successfully',
+      restaurant: restaurant
+    });
+  } catch (error) {
+    console.error('Error updating restaurant settings:', error);
+    res.status(500).json({ message: 'Error updating restaurant settings', error: error.message });
+  }
+});
+
 // Delete restaurant (authenticated owner only)
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {

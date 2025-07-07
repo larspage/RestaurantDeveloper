@@ -205,6 +205,12 @@ const RestaurantDetail = () => {
                   View Orders
                 </button>
                 <button
+                  onClick={() => router.push(`/dashboard/restaurants/${restaurant?._id}/settings`)}
+                  className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded transition-colors"
+                >
+                  Settings
+                </button>
+                <button
                   onClick={() => router.push(`/dashboard/preview/${restaurant?._id}`)}
                   className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded transition-colors"
                 >

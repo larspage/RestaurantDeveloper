@@ -88,6 +88,7 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
           onChange={(e) => setName(e.target.value)}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
+          data-cy="menu-item-name-input"
         />
       </div>
       
@@ -101,6 +102,7 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          data-cy="menu-item-description-input"
         />
       </div>
       
@@ -117,6 +119,7 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
           min="0"
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
+          data-cy="menu-item-price-input"
         />
       </div>
       
@@ -127,6 +130,7 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
           checked={available}
           onChange={(e) => setAvailable(e.target.checked)}
           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          data-cy="menu-item-available-checkbox"
         />
         <label htmlFor="available" className="ml-2 block text-sm text-gray-900">
           Available
@@ -142,6 +146,7 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
             setImageFile(null);
             setImageUrl(null);
           }}
+          data-cy="menu-item-image-uploader"
         />
       </div>
       
@@ -164,6 +169,7 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
           type="button"
           onClick={onCancel}
           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          data-cy="cancel-edit-item-button"
         >
           Cancel
         </button>
@@ -175,6 +181,7 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
               ? 'bg-blue-400 cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700'
           }`}
+          data-cy="save-item-button"
         >
           {isUploading ? 'Uploading...' : 'Save'}
         </button>

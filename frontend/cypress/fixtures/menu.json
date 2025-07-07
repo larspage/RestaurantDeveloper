@@ -1,6 +1,6 @@
 {
   "_id": "menu-123",
-  "restaurantId": "restaurant-123",
+  "restaurant": "restaurant-123",
   "sections": [
     {
       "_id": "section-1",

@@ -68,6 +68,12 @@ describe('Menu API Endpoints', () => {
     });
   });
 
+  afterEach(async () => {
+    await User.deleteMany({});
+    await Restaurant.deleteMany({});
+    await Menu.deleteMany({});
+  });
+
   describe('GET /menus/:restaurant_id', () => {
     it('should retrieve the menu for a given restaurant', async () => {
       const res = await request(app).get(`/menus/${restaurant._id}`);

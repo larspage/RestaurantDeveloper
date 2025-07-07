@@ -40,6 +40,138 @@ const restaurantSchema = new mongoose.Schema({
   business_hours: {
     type: Map,
     of: String
+  },
+  // Restaurant Settings
+  settings: {
+    // Order Management Settings
+    accept_new_orders: {
+      type: Boolean,
+      default: true
+    },
+    auto_confirm_orders: {
+      type: Boolean,
+      default: false
+    },
+    show_unavailable_items: {
+      type: Boolean,
+      default: false
+    },
+    // Contact Preferences
+    contact_preferences: {
+      email_notifications: {
+        type: Boolean,
+        default: true
+      },
+      sms_notifications: {
+        type: Boolean,
+        default: false
+      },
+      notification_email: {
+        type: String,
+        trim: true
+      },
+      notification_phone: {
+        type: String,
+        trim: true
+      }
+    },
+    // Operating Hours (detailed)
+    operating_hours: {
+      monday: {
+        is_open: { type: Boolean, default: true },
+        open_time: { type: String, default: '09:00' },
+        close_time: { type: String, default: '22:00' }
+      },
+      tuesday: {
+        is_open: { type: Boolean, default: true },
+        open_time: { type: String, default: '09:00' },
+        close_time: { type: String, default: '22:00' }
+      },
+      wednesday: {
+        is_open: { type: Boolean, default: true },
+        open_time: { type: String, default: '09:00' },
+        close_time: { type: String, default: '22:00' }
+      },
+      thursday: {
+        is_open: { type: Boolean, default: true },
+        open_time: { type: String, default: '09:00' },
+        close_time: { type: String, default: '22:00' }
+      },
+      friday: {
+        is_open: { type: Boolean, default: true },
+        open_time: { type: String, default: '09:00' },
+        close_time: { type: String, default: '22:00' }
+      },
+      saturday: {
+        is_open: { type: Boolean, default: true },
+        open_time: { type: String, default: '09:00' },
+        close_time: { type: String, default: '22:00' }
+      },
+      sunday: {
+        is_open: { type: Boolean, default: true },
+        open_time: { type: String, default: '09:00' },
+        close_time: { type: String, default: '22:00' }
+      }
+    },
+    // Print Settings
+    print_settings: {
+      // Paper Format Settings
+      paper_format: {
+        size: { type: String, enum: ['58mm', '80mm', 'standard'], default: '80mm' },
+        margin_top: { type: Number, default: 5 },
+        margin_bottom: { type: Number, default: 5 },
+        margin_left: { type: Number, default: 2 },
+        margin_right: { type: Number, default: 2 },
+        line_spacing: { type: Number, default: 1 },
+        auto_cut: { type: Boolean, default: true }
+      },
+      // Font Settings
+      font_settings: {
+        header_font_size: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
+        body_font_size: { type: String, enum: ['small', 'medium', 'large'], default: 'small' },
+        font_style: { type: String, enum: ['normal', 'bold'], default: 'normal' },
+        print_density: { type: String, enum: ['light', 'medium', 'dark'], default: 'medium' }
+      },
+      // Header/Logo Settings
+      header_settings: {
+        include_logo: { type: Boolean, default: false },
+        logo_url: { type: String, trim: true },
+        header_text: { type: String, default: 'Order Receipt', trim: true },
+        include_restaurant_info: { type: Boolean, default: true },
+        include_contact_info: { type: Boolean, default: true },
+        include_order_date: { type: Boolean, default: true }
+      },
+      // Kitchen Ticket Settings
+      kitchen_ticket: {
+        enabled: { type: Boolean, default: true },
+        show_customer_info: { type: Boolean, default: false },
+        show_special_instructions: { type: Boolean, default: true },
+        show_item_modifiers: { type: Boolean, default: true },
+        show_preparation_time: { type: Boolean, default: false },
+        group_by_category: { type: Boolean, default: false },
+        highlight_allergens: { type: Boolean, default: true }
+      },
+      // Customer Receipt Settings
+      customer_receipt: {
+        enabled: { type: Boolean, default: true },
+        show_item_details: { type: Boolean, default: true },
+        show_price_breakdown: { type: Boolean, default: true },
+        show_tax_details: { type: Boolean, default: true },
+        show_payment_method: { type: Boolean, default: false },
+        include_thank_you_message: { type: Boolean, default: true },
+        thank_you_message: { type: String, default: 'Thank you for your order!', trim: true },
+        include_reorder_info: { type: Boolean, default: false }
+      },
+      // Email Template Settings
+      email_template: {
+        enabled: { type: Boolean, default: true },
+        subject_template: { type: String, default: 'Order Confirmation - #{orderNumber}', trim: true },
+        header_template: { type: String, default: 'Thank you for your order!', trim: true },
+        footer_template: { type: String, default: 'We appreciate your business.', trim: true },
+        include_restaurant_logo: { type: Boolean, default: true },
+        include_order_tracking: { type: Boolean, default: false }
+      }
+    }
   }
 }, {
   timestamps: true
@@ -49,4 +181,4 @@ const restaurantSchema = new mongoose.Schema({
 restaurantSchema.index({ owner: 1 });
 restaurantSchema.index({ status: 1 });
 
-module.exports = mongoose.model('Restaurant', restaurantSchema); 
+module.exports = mongoose.model('Restaurant', restaurantSchema);
