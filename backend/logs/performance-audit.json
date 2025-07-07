@@ -1,0 +1,65 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 7
+    },
+    "auditLog": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance-audit.json",
+    "files": [
+        {
+            "date": 1751921006916,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07.log",
+            "hash": "bbbcb04b2e46e35a1a3afb79f9039c16153bcc40b6072046f042565e8d6deaa0"
+        },
+        {
+            "date": 1751923062840,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-17-42.log.2025-07-07",
+            "hash": "d368399cd43ca4c51074314dd094580640d10a11fd03da2c4ee206b53554a7a5"
+        },
+        {
+            "date": 1751923063515,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-17-43.log.2025-07-07",
+            "hash": "1b7a6e0266d486260e2c12f2d9f617ee083c07aea84b2fa8fd3c058fffd0f257"
+        },
+        {
+            "date": 1751923069648,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-17-49.log.2025-07-07",
+            "hash": "005739bd29f80a1832dd35ee58e922736fcec7830654b121979e4ac7e98580ef"
+        },
+        {
+            "date": 1751923077322,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-17-57.log.2025-07-07",
+            "hash": "7396580e49944c91908355a95b21f814be065bfbdc04fba0f5059f020389b923"
+        },
+        {
+            "date": 1751923084728,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-18-04.log.2025-07-07",
+            "hash": "929c26138ae6b78a3cf29704686060824bac1bcc7823e7df257fbe9080727f7d"
+        },
+        {
+            "date": 1751923091678,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-18-11.log.2025-07-07",
+            "hash": "471633e1a10ad6c93e96d1b8f49e6ab304bc26c1b661093abe9711a35f75ae72"
+        },
+        {
+            "date": 1751923097802,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-18-17.log.2025-07-07",
+            "hash": "2c6bc3750b9f4e33cfe3bc1e6a6e5c9005098a0ed0e591e5c02197f00481b93d"
+        },
+        {
+            "date": 1751923098064,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-18-18.log.2025-07-07",
+            "hash": "865a4cf96c3dbbbbf3263feb5b765cbe9895021bf2ce1eaa2348a86ab9ba1308"
+        },
+        {
+            "date": 1751923107477,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-18-27.log.2025-07-07",
+            "hash": "918e197ac7086e1274c8d2874428b597f41af5a4f067796255ffc0754f0b9cca"
+        },
+        {
+            "date": 1751923108120,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\performance\\performance-2025-07-07T21-18-28.log.2025-07-07",
+            "hash": "82cb17bf3eb4878f5af83203c553f5d93990effffbbcc085ccc4f35d3e7ae048"
+        }
+    ],
+    "hashType": "sha256"
+}

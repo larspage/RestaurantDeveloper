@@ -1,0 +1,25 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 7
+    },
+    "auditLog": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\security-audit.json",
+    "files": [
+        {
+            "date": 1751921006951,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\security\\security-2025-07-07.log",
+            "hash": "557091431d1efd31fdf9921a00c378068e50a395a60b18bfbaaab79f6bf9a53a"
+        },
+        {
+            "date": 1751923107564,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\security\\security-2025-07-07T21-18-27.log.2025-07-07",
+            "hash": "a1925b0fbd89c7d581ce4ed74b97828ffff2a3564cbea58203eddaab606aeb68"
+        },
+        {
+            "date": 1751923108181,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\security\\security-2025-07-07T21-18-28.log.2025-07-07",
+            "hash": "6e2fab403b3fc55b6a901bfa184c58c03054dbcc62f5f0d83ae0b0c875fd9c2d"
+        }
+    ],
+    "hashType": "sha256"
+}

@@ -1,0 +1,45 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 7
+    },
+    "auditLog": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\database-audit.json",
+    "files": [
+        {
+            "date": 1751921006939,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\database\\db-2025-07-07.log",
+            "hash": "918ca7423cfaac3bc2bcc36e01a1c6fe7543cec2f731695be91c4aad014b6684"
+        },
+        {
+            "date": 1751923084743,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\database\\db-2025-07-07T21-18-04.log.2025-07-07",
+            "hash": "269934a630a01e0dc75cd90c5b285e7059b925a789196e4289f0d729f3f99d96"
+        },
+        {
+            "date": 1751923091693,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\database\\db-2025-07-07T21-18-11.log.2025-07-07",
+            "hash": "7e5b3de9448d425da19b9e7302db1bf60f75a9b661cc5e9e9689343be970ee77"
+        },
+        {
+            "date": 1751923097819,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\database\\db-2025-07-07T21-18-17.log.2025-07-07",
+            "hash": "bc1c50ab1b60d322e28ab52d81ff557b8fc51054e85b09052333eec80b9619aa"
+        },
+        {
+            "date": 1751923098086,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\database\\db-2025-07-07T21-18-18.log.2025-07-07",
+            "hash": "832df21715120617c401526810fac041f99782fa4c884a32858b461f9fb52577"
+        },
+        {
+            "date": 1751923107528,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\database\\db-2025-07-07T21-18-27.log.2025-07-07",
+            "hash": "95c2d32559f3d8e6cdafae3ec0286cd984abe9f8346369109e7a3b8daf72d838"
+        },
+        {
+            "date": 1751923108151,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\database\\db-2025-07-07T21-18-28.log.2025-07-07",
+            "hash": "4adfd437554d3f9415351f3c7afa837cd3af4b04bcc2f1ca7848b56bff5e79fc"
+        }
+    ],
+    "hashType": "sha256"
+}

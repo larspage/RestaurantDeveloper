@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-07-07 17:18:29",
+  "level": "INFO",
+  "message": "Operation completed",
+  "category": "performance",
+  "operation": "mongodb_connection",
+  "startTimestamp": "2025-07-07T21:18:29.317Z",
+  "endTimestamp": "2025-07-07T21:18:29.492Z",
+  "duration_ms": 174.64,
+  "duration_ns": 174642500,
+  "success": true
+}

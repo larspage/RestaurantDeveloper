@@ -5,6 +5,8 @@ const { createClient } = require('@supabase/supabase-js');
 const isTestMode = process.env.NODE_ENV === 'test';
 // Check if we're in development mode
 const isDevelopmentMode = process.env.NODE_ENV !== 'production';
+// Check if Supabase is properly configured
+const hasSupabaseConfig = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Get Supabase configuration with fallbacks for development
 const supabaseUrl = isTestMode 
@@ -40,9 +42,22 @@ const verifyToken = async (token) => {
     return { id: token.replace('mock.jwt.token.', ''), email: 'test@example.com' };
   }
   
-  // Handle development mode token
+  // Handle development mode when Supabase is not configured
+  if (!hasSupabaseConfig && token.startsWith('dev.jwt.token.')) {
+    const userId = token.replace('dev.jwt.token.', '');
+    console.log('Using development token for authentication:', userId);
+    return { 
+      id: userId, 
+      email: 'dev@example.com',
+      user_metadata: {
+        name: 'Development User'
+      }
+    };
+  }
+  
+  // Handle legacy development mode token
   if (isDevelopmentMode && token === 'dev-mock-token') {
-    console.log('Using development token for authentication');
+    console.log('Using legacy development token for authentication');
     return { 
       id: 'dev-user-123', 
       email: 'dev@example.com',
@@ -92,9 +107,75 @@ const getUserProfile = async (userId) => {
   }
 };
 
+// Create user with email and password
+const createUser = async (email, password) => {
+  if (isTestMode || !hasSupabaseConfig) {
+    // Return mock user in test mode or when Supabase is not configured
+    const userId = isTestMode ? `test-user-${Date.now()}` : `dev-user-${Date.now()}`;
+    console.log(`Creating ${isTestMode ? 'test' : 'development'} user:`, email);
+    return { 
+      id: userId, 
+      email,
+      user_metadata: { name: 'Development User' }
+    };
+  }
+  
+  try {
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true // Auto-confirm email in development
+    });
+
+    if (error) throw error;
+    return data.user;
+  } catch (error) {
+    console.error('Supabase createUser error:', error);
+    throw new Error(`Failed to create user: ${error.message}`);
+  }
+};
+
+// Sign in with email and password
+const signInWithPassword = async (email, password) => {
+  if (isTestMode || !hasSupabaseConfig) {
+    // Return mock authentication in test mode or when Supabase is not configured
+    const userIdSuffix = email.replace('@', '-').replace('.', '-');
+    const userId = isTestMode ? `test-user-${userIdSuffix}` : `dev-user-${userIdSuffix}`;
+    console.log(`Authenticating ${isTestMode ? 'test' : 'development'} user:`, email);
+    
+    return {
+      user: { 
+        id: userId, 
+        email,
+        user_metadata: { name: 'Development User' }
+      },
+      token: `dev.jwt.token.${userId}`
+    };
+  }
+  
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) throw error;
+    
+    return {
+      user: data.user,
+      token: data.session.access_token
+    };
+  } catch (error) {
+    console.error('Supabase signInWithPassword error:', error);
+    throw new Error(`Authentication failed: ${error.message}`);
+  }
+};
+
 module.exports = {
   supabase,
   supabaseAdmin,
   verifyToken,
-  getUserProfile
+  getUserProfile,
+  createUser,
+  signInWithPassword
 };

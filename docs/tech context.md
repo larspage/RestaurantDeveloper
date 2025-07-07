@@ -44,6 +44,15 @@ Mr. Brooks Restaurant Creator is powered by a **hybrid architecture**, utilizing
 - **Provides fast retrieval via CDN for optimized loading times**.
 - **Integrates directly with frontend for scalable media hosting**.
 
+### **8. Winston Logging System (Observability & Debugging)**
+- **Comprehensive logging framework** with daily log rotation and automatic cleanup.
+- **Performance monitoring** with queryable metrics and slow operation detection.
+- **Error tracking** with contextual information and stack traces.
+- **Category-based logging** (Performance, Errors, Authentication, Database, API, Business).
+- **Configurable log levels** and retention policies (7-day default).
+- **Structured JSON logging** for analysis and troubleshooting.
+- **Development mode support** with enhanced debugging capabilities.
+
 ---
 
 ## System Interaction Flow
@@ -64,6 +73,16 @@ Mr. Brooks Restaurant Creator is powered by a **hybrid architecture**, utilizing
 2. Order request is sent to the **API (Node.js)**.
 3. API updates the **MongoDB database** and notifies the kitchen ticket system.
 4. **Kitchen ticket prints automatically** for restaurant staff.
+5. **All operations are logged** with performance metrics and error tracking.
+
+### **Logging & Observability Flow**
+1. **Performance timers** track operation duration across all system components.
+2. **Error logging** captures failures with full context and stack traces.
+3. **Authentication events** are logged for security and debugging.
+4. **Database operations** are monitored for slow queries and connection issues.
+5. **API requests/responses** are logged with configurable detail levels.
+6. **Business events** (orders, menu updates) are tracked for audit trails.
+7. **Log files rotate daily** and are automatically cleaned up after 7 days.
 
 ---
 

@@ -1,0 +1,36 @@
+{
+  "timestamp": "2025-07-07 17:18:18",
+  "level": "INFO",
+  "message": "Operation completed",
+  "category": "performance",
+  "operation": "server_startup",
+  "startTimestamp": "2025-07-07T21:18:18.487Z",
+  "endTimestamp": "2025-07-07T21:18:18.499Z",
+  "duration_ms": 11.48,
+  "duration_ns": 11481700,
+  "success": true
+}
+{
+  "timestamp": "2025-07-07 17:18:18",
+  "level": "INFO",
+  "message": "Operation completed",
+  "category": "performance",
+  "operation": "mongodb_connection",
+  "startTimestamp": "2025-07-07T21:18:18.438Z",
+  "endTimestamp": "2025-07-07T21:18:18.614Z",
+  "duration_ms": 176.08,
+  "duration_ns": 176080600,
+  "success": true
+}
+{
+  "timestamp": "2025-07-07 17:18:18",
+  "level": "INFO",
+  "message": "Operation completed",
+  "category": "performance",
+  "operation": "mongodb_connection",
+  "startTimestamp": "2025-07-07T21:18:18.529Z",
+  "endTimestamp": "2025-07-07T21:18:18.692Z",
+  "duration_ms": 163.35,
+  "duration_ns": 163347300,
+  "success": true
+}

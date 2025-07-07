@@ -1,19 +1,39 @@
 const express = require('express');
 const router = express.Router();
-const { createUser, verifyToken } = require('../db/supabase');
+const { createUser, verifyToken, signInWithPassword } = require('../db/supabase');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
 
+// Import logging utilities
+const { auth: authLogger, business: businessLogger } = require('../utils/logger');
+const PerformanceLogger = require('../utils/performanceLogger');
+const ErrorLogger = require('../utils/errorLogger');
+
 // POST /auth/register - User registration
 router.post('/register', async (req, res) => {
+  const timer = PerformanceLogger.startTimer('user_registration');
+  
   try {
     const { email, password, role = 'customer', name, restaurant_id = null } = req.body;
 
-    console.log('Registration attempt:', { email, role, name });
+    authLogger.info('Registration attempt started', { 
+      email, 
+      role, 
+      name,
+      requestId: req.id,
+      ip: req.ip 
+    });
 
     // Validate required fields
     if (!email || !password || !name) {
-      console.log('Validation failed: Missing required fields');
+      timer.end({ success: false, error: 'validation_failed' });
+      authLogger.warn('Registration validation failed: Missing required fields', {
+        email: !!email,
+        password: !!password,
+        name: !!name,
+        requestId: req.id
+      });
+      
       return res.status(400).json({ 
         error: 'Missing required fields',
         details: {
@@ -45,26 +65,46 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    console.log('All validations passed, creating Supabase user...');
+    authLogger.info('All validations passed, creating Supabase user', { 
+      email, 
+      requestId: req.id 
+    });
 
     // Create user in Supabase
     const supabaseUser = await createUser(email, password);
-    console.log('Supabase user created:', supabaseUser.id);
+    authLogger.info('Supabase user created successfully', { 
+      supabase_id: supabaseUser.id, 
+      email,
+      requestId: req.id 
+    });
 
     // Create user profile in MongoDB
-    const mongoUser = new User({
+    const userData = {
       supabase_id: supabaseUser.id,
-      email,
       name,
       role,
       restaurant_id: role === 'restaurant_owner' ? restaurant_id : null
+    };
+    
+    authLogger.debug('Creating MongoDB user profile', { 
+      userData, 
+      requestId: req.id 
+    });
+    
+    const mongoUser = new User(userData);
+
+    authLogger.debug('Saving MongoDB user profile', { requestId: req.id });
+    await mongoUser.save();
+    authLogger.info('MongoDB user profile created successfully', { 
+      mongo_id: mongoUser._id,
+      supabase_id: supabaseUser.id,
+      requestId: req.id 
     });
 
-    await mongoUser.save();
-    console.log('MongoDB user profile created:', mongoUser._id);
-
     // Return success response
-    res.status(201).json({
+    timer.end({ success: true });
+    
+    const responseData = {
       message: 'User registered successfully',
       user: {
         user_id: supabaseUser.id,
@@ -72,10 +112,33 @@ router.post('/register', async (req, res) => {
         name,
         role
       }
+    };
+    
+    authLogger.info('User registration completed successfully', {
+      user_id: supabaseUser.id,
+      email,
+      role,
+      requestId: req.id
     });
+    
+    businessLogger.info('New user registered', {
+      user_id: supabaseUser.id,
+      email,
+      role,
+      requestId: req.id
+    });
+    
+    res.status(201).json(responseData);
 
   } catch (error) {
-    console.error('Registration error:', error);
+    timer.end({ success: false, error: error.message });
+    
+    ErrorLogger.logAuthError(error, {
+      operation: 'registration',
+      email: req.body?.email || 'unknown',
+      ip: req.ip,
+      userAgent: req.get('User-Agent')
+    });
     
     // Check for duplicate email error
     if (error.code === 11000) {
@@ -101,13 +164,25 @@ router.post('/register', async (req, res) => {
 
 // POST /auth/login - User login
 router.post('/login', async (req, res) => {
+  const timer = PerformanceLogger.startTimer('user_login');
+  
   try {
     const { email, password } = req.body;
 
-    console.log('Login attempt for:', email);
+    authLogger.info('Login attempt started', { 
+      email, 
+      requestId: req.id,
+      ip: req.ip 
+    });
 
     if (!email || !password) {
-      console.log('Login validation failed: Missing credentials');
+      timer.end({ success: false, error: 'validation_failed' });
+      authLogger.warn('Login validation failed: Missing credentials', {
+        email: !!email,
+        password: !!password,
+        requestId: req.id
+      });
+      
       return res.status(400).json({ 
         error: 'Email and password are required',
         details: {
@@ -117,24 +192,40 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    console.log('Attempting Supabase authentication...');
+    authLogger.debug('Attempting Supabase authentication', { 
+      email, 
+      requestId: req.id 
+    });
 
     // Authenticate with Supabase
-    const { user: supabaseUser, token } = await require('../db/supabase').signInWithPassword(email, password);
-    console.log('Supabase authentication successful for user:', supabaseUser.id);
+    const { user: supabaseUser, token } = await signInWithPassword(email, password);
+    authLogger.info('Supabase authentication successful', { 
+      user_id: supabaseUser.id,
+      email,
+      requestId: req.id 
+    });
 
     // Get user profile from MongoDB
+    authLogger.debug('Fetching user profile from MongoDB', { 
+      user_id: supabaseUser.id,
+      requestId: req.id 
+    });
+    
     const mongoUser = await User.findOne({ supabase_id: supabaseUser.id });
     
     if (!mongoUser) {
-      console.log('MongoDB user profile not found for:', supabaseUser.id);
+      timer.end({ success: false, error: 'user_profile_not_found' });
+      authLogger.warn('MongoDB user profile not found', { 
+        user_id: supabaseUser.id,
+        email,
+        requestId: req.id 
+      });
       return res.status(404).json({ error: 'User profile not found - please complete registration' });
     }
 
-    console.log('Login successful for user:', mongoUser.email, 'role:', mongoUser.role);
-
-    // Return success response
-    res.json({
+    timer.end({ success: true });
+    
+    const responseData = {
       message: 'Login successful',
       token,
       user: {
@@ -143,10 +234,34 @@ router.post('/login', async (req, res) => {
         name: mongoUser.name,
         role: mongoUser.role
       }
+    };
+    
+    authLogger.info('Login completed successfully', { 
+      user_id: supabaseUser.id,
+      email: mongoUser.email,
+      role: mongoUser.role,
+      requestId: req.id 
+    });
+    
+    businessLogger.info('User logged in', {
+      user_id: supabaseUser.id,
+      email: mongoUser.email,
+      role: mongoUser.role,
+      requestId: req.id
     });
 
+    // Return success response
+    res.json(responseData);
+
   } catch (error) {
-    console.error('Login error:', error);
+    timer.end({ success: false, error: error.message });
+    
+    ErrorLogger.logAuthError(error, {
+      operation: 'login',
+      email: req.body?.email || 'unknown',
+      ip: req.ip,
+      userAgent: req.get('User-Agent')
+    });
     
     // Check for authentication errors
     if (error.message && error.message.includes('Invalid credentials')) {

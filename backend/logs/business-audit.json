@@ -1,0 +1,35 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 7
+    },
+    "auditLog": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\business-audit.json",
+    "files": [
+        {
+            "date": 1751921006948,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\business\\business-2025-07-07.log",
+            "hash": "fbfd8cf44cc3455eb3789a2103a1f2910b572804d39bb0dfcd2fb498e72ee05a"
+        },
+        {
+            "date": 1751923097828,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\business\\business-2025-07-07T21-18-17.log.2025-07-07",
+            "hash": "789feca00adbef1469d10888c2f9fc40fde664940676b113e22fdc009c486fc7"
+        },
+        {
+            "date": 1751923098095,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\business\\business-2025-07-07T21-18-18.log.2025-07-07",
+            "hash": "79eb0180dd0fbe31977048287f567cc6c1267c65afe43f8e8f69bf7827f7953c"
+        },
+        {
+            "date": 1751923107558,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\business\\business-2025-07-07T21-18-27.log.2025-07-07",
+            "hash": "327493762c9ee981da763b6fa0d64efc830a6d7cf1b79c3be5e0a9cf944cc6b2"
+        },
+        {
+            "date": 1751923108169,
+            "name": "C:\\Repos\\RestaurantDeveloper\\backend\\logs\\business\\business-2025-07-07T21-18-28.log.2025-07-07",
+            "hash": "668f87263b950ca8b9c6c54e04411d8b2feac1351e2c606cec9d73f2c0d35c43"
+        }
+    ],
+    "hashType": "sha256"
+}
