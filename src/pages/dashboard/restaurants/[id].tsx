@@ -199,10 +199,10 @@ const RestaurantDetail = () => {
                   Manage Menu
                 </button>
                 <button
-                  onClick={() => router.push(`/dashboard/orders/${restaurant?._id}`)}
+                  onClick={() => router.push(`/dashboard/restaurants/${restaurant?._id}/orders`)}
                   className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded transition-colors"
                 >
-                  View Orders
+                  Manage Orders
                 </button>
                 <button
                   onClick={() => router.push(`/dashboard/restaurants/${restaurant?._id}/settings`)}
