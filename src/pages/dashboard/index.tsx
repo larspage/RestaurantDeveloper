@@ -70,6 +70,11 @@ const Dashboard = () => {
                   Test Restaurant Management
                 </span>
               </Link>
+              <Link href={`/dashboard/analytics/${mockRestaurantId}`}>
+                <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                  Test Analytics Dashboard
+                </span>
+              </Link>
             </div>
           </div>
         )}
@@ -126,20 +131,25 @@ const Dashboard = () => {
                       {restaurant.status.charAt(0).toUpperCase() + restaurant.status.slice(1)}
                     </span>
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <Link href={`/dashboard/restaurants/${restaurant._id}`}>
-                      <span className="block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors cursor-pointer flex-1">
+                      <span className="block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
                         Manage
                       </span>
                     </Link>
                     <Link href={`/dashboard/menus/${restaurant._id}`}>
-                      <span className="block text-center bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded transition-colors cursor-pointer flex-1">
+                      <span className="block text-center bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
                         Menu
                       </span>
                     </Link>
                     <Link href={`/dashboard/orders`}>
-                      <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer flex-1">
+                      <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
                         Orders
+                      </span>
+                    </Link>
+                    <Link href={`/dashboard/analytics/${restaurant._id}`}>
+                      <span className="block text-center bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                        Analytics
                       </span>
                     </Link>
                   </div>
