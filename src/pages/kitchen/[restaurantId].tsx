@@ -154,7 +154,7 @@ const KitchenDisplay: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-900 text-white" data-testid="kitchen-display-container">
       {/* Audio element for new order alerts */}
       <audio ref={audioRef} preload="auto">
         <source src="/sounds/new-order.mp3" type="audio/mpeg" />
@@ -168,14 +168,14 @@ const KitchenDisplay: React.FC = () => {
             <h1 className="text-3xl font-bold">Kitchen Display</h1>
             <div className="flex items-center space-x-2">
               <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-lg">{isConnected ? 'Connected' : 'Disconnected'}</span>
+              <span className="text-lg" data-testid="connection-status">{isConnected ? 'Connected' : 'Disconnected'}</span>
             </div>
           </div>
 
           <div className="flex items-center space-x-6">
             <div className="text-right">
-              <div className="text-2xl font-mono">
-                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <div className="text-2xl font-mono" data-testid="current-time">
+                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </div>
               <div className="text-sm text-gray-400">
                 {currentTime.toLocaleDateString()}
@@ -188,8 +188,9 @@ const KitchenDisplay: React.FC = () => {
                 className={`px-4 py-2 rounded-lg font-semibold ${
                   audioEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'
                 }`}
+                data-testid="audio-toggle"
               >
-                🔊 {audioEnabled ? 'ON' : 'OFF'}
+                Audio: {audioEnabled ? 'ON' : 'OFF'}
               </button>
 
               <button
@@ -197,6 +198,7 @@ const KitchenDisplay: React.FC = () => {
                 className={`px-4 py-2 rounded-lg font-semibold ${
                   autoRefresh ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'
                 }`}
+                data-testid="auto-refresh-toggle"
               >
                 🔄 {autoRefresh ? 'AUTO' : 'MANUAL'}
               </button>
@@ -204,15 +206,16 @@ const KitchenDisplay: React.FC = () => {
               <button
                 onClick={fetchKitchenOrders}
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold"
+                data-testid="refresh-button"
               >
-                ↻ REFRESH
+                ↻ Refresh
               </button>
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="mt-2 p-3 bg-red-600 text-white rounded-lg">
+          <div className="mt-2 p-3 bg-red-600 text-white rounded-lg" data-testid="error-message">
             {error}
           </div>
         )}
@@ -223,37 +226,39 @@ const KitchenDisplay: React.FC = () => {
         {orders.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🍽️</div>
-            <h2 className="text-4xl font-bold mb-2">No Active Orders</h2>
+            <h2 className="text-4xl font-bold mb-2">No active orders</h2>
             <p className="text-xl text-gray-400">Kitchen is all caught up!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-testid="orders-grid">
             {orders.map((order) => (
               <div
                 key={order._id}
                 className={`${getPriorityColor(order)} border-4 rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-xl`}
+                data-testid={`order-card-${order._id}`}
               >
                 {/* Order Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <div className="text-2xl font-bold text-gray-800">#{order._id.slice(-6).toUpperCase()}</div>
+                    <div className="text-2xl font-bold text-gray-800" data-testid="order-id">#{order._id.slice(-6).toUpperCase()}</div>
                     <div className="text-sm text-gray-600">
                       {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(order.status)}`}>
+                    <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(order.status as OrderStatus)}`}>
                       {order.status.replace('_', ' ').toUpperCase()}
                     </div>
-                    <div className={`text-lg font-bold mt-1 ${order.isOverdue ? 'text-red-600' : 'text-gray-700'}`}>
-                      {order.elapsedTime}min
+                    <div className={`text-lg font-bold mt-1 ${order.isOverdue ? 'text-red-600' : 'text-gray-700'}`} data-testid="elapsed-time">
+                      {order.elapsedTime} min
+                      {order.isOverdue && <span className="text-red-600 ml-2" data-testid="overdue-indicator">OVERDUE</span>}
                     </div>
                   </div>
                 </div>
 
                 {/* Customer Info */}
                 {(order.customer || order.guest_info) && (
-                  <div className="mb-4 p-3 bg-white bg-opacity-50 rounded-lg">
+                  <div className="mb-4 p-3 bg-white bg-opacity-50 rounded-lg" data-testid="customer-info">
                     <div className="font-semibold text-gray-800">
                       {order.guest_info?.name || 'Registered Customer'}
                     </div>
@@ -264,7 +269,7 @@ const KitchenDisplay: React.FC = () => {
                 )}
 
                 {/* Order Items */}
-                <div className="space-y-3 mb-4">
+                <div className="space-y-3 mb-4" data-testid="order-items">
                   {order.items.map((item, index) => (
                     <div key={index} className="bg-white bg-opacity-70 rounded-lg p-3">
                       <div className="flex justify-between items-start">
@@ -277,6 +282,7 @@ const KitchenDisplay: React.FC = () => {
                                 <span
                                   key={modIndex}
                                   className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1 mb-1"
+                                  data-testid="item-modification"
                                 >
                                   {mod}
                                 </span>
@@ -284,7 +290,7 @@ const KitchenDisplay: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <div className="text-lg font-bold text-gray-800">
+                        <div className="text-lg font-bold text-gray-800" data-testid="order-total">
                           ${(item.price * item.quantity).toFixed(2)}
                         </div>
                       </div>
@@ -293,10 +299,10 @@ const KitchenDisplay: React.FC = () => {
                 </div>
 
                 {/* Special Instructions */}
-                {order.special_instructions && (
-                  <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 rounded">
+                {order.notes && (
+                  <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 rounded" data-testid="special-instructions">
                     <div className="font-semibold text-yellow-800 text-sm">SPECIAL INSTRUCTIONS:</div>
-                    <div className="text-yellow-700">{order.special_instructions}</div>
+                    <div className="text-yellow-700">{order.notes}</div>
                   </div>
                 )}
 
@@ -306,6 +312,7 @@ const KitchenDisplay: React.FC = () => {
                     <button
                       onClick={() => updateOrderStatus(order._id, 'confirmed')}
                       className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                      data-testid="confirm-button"
                     >
                       CONFIRM
                     </button>
@@ -315,6 +322,7 @@ const KitchenDisplay: React.FC = () => {
                     <button
                       onClick={() => updateOrderStatus(order._id, 'in_kitchen')}
                       className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                      data-testid="start-cooking-button"
                     >
                       START COOKING
                     </button>
@@ -324,6 +332,7 @@ const KitchenDisplay: React.FC = () => {
                     <button
                       onClick={() => updateOrderStatus(order._id, 'ready_for_pickup')}
                       className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                      data-testid="ready-button"
                     >
                       READY
                     </button>
@@ -341,7 +350,7 @@ const KitchenDisplay: React.FC = () => {
                 <div className="mt-4">
                   <div className="flex justify-between text-xs text-gray-600 mb-1">
                     <span>Started</span>
-                    <span>Target: {order.estimatedCompletionTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span data-testid="estimated-completion">Est: {order.estimatedCompletionTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
@@ -361,23 +370,19 @@ const KitchenDisplay: React.FC = () => {
       </div>
 
       {/* Footer Stats */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-4" data-testid="footer-stats">
         <div className="flex justify-center space-x-8 text-lg">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-400">{orders.filter(o => o.status === 'received').length}</div>
-            <div className="text-sm text-gray-400">NEW</div>
+            <div className="text-2xl font-bold text-blue-400" data-testid="new-count">NEW: {orders.filter(o => o.status === 'received').length}</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-400">{orders.filter(o => o.status === 'confirmed').length}</div>
-            <div className="text-sm text-gray-400">CONFIRMED</div>
+            <div className="text-2xl font-bold text-yellow-400" data-testid="confirmed-count">CONFIRMED: {orders.filter(o => o.status === 'confirmed').length}</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-400">{orders.filter(o => o.status === 'in_kitchen').length}</div>
-            <div className="text-sm text-gray-400">COOKING</div>
+            <div className="text-2xl font-bold text-orange-400" data-testid="cooking-count">COOKING: {orders.filter(o => o.status === 'in_kitchen').length}</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-400">{orders.filter(o => o.isOverdue).length}</div>
-            <div className="text-sm text-gray-400">OVERDUE</div>
+            <div className="text-2xl font-bold text-red-400" data-testid="overdue-count">OVERDUE: {orders.filter(o => o.isOverdue).length}</div>
           </div>
         </div>
       </div>

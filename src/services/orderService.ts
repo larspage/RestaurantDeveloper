@@ -119,6 +119,12 @@ const orderService = {
     return response.data;
   },
 
+  // Get all orders for a restaurant (including inactive ones)
+  getRestaurantOrders: async (restaurantId: string): Promise<Order[]> => {
+    const response = await api.get(`/orders/restaurant/${restaurantId}/active`);
+    return response.data;
+  },
+
   // Get order statistics for dashboard
   getOrderStats: async (restaurantId: string): Promise<{
     total: number;

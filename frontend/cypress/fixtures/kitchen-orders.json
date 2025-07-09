@@ -1,0 +1,150 @@
+[
+  {
+    "_id": "order-1",
+    "restaurant": "test-restaurant-id",
+    "customer": "customer-1",
+    "items": [
+      {
+        "_id": "item-1",
+        "name": "Margherita Pizza",
+        "price": 16.99,
+        "quantity": 1,
+        "modifications": ["Extra cheese", "Thin crust"]
+      },
+      {
+        "_id": "item-2",
+        "name": "Garlic Bread",
+        "price": 6.99,
+        "quantity": 2,
+        "modifications": []
+      }
+    ],
+    "total_price": 30.97,
+    "status": "received",
+    "guest_info": {
+      "name": "John Doe",
+      "phone": "555-1234",
+      "email": "john@example.com"
+    },
+    "notes": "Please make it extra crispy and deliver to side door",
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z"
+  },
+  {
+    "_id": "order-2",
+    "restaurant": "test-restaurant-id",
+    "customer": "customer-2",
+    "items": [
+      {
+        "_id": "item-3",
+        "name": "Caesar Salad",
+        "price": 12.99,
+        "quantity": 1,
+        "modifications": ["No croutons", "Extra dressing"]
+      },
+      {
+        "_id": "item-4",
+        "name": "Grilled Chicken",
+        "price": 18.99,
+        "quantity": 1,
+        "modifications": ["Medium rare"]
+      }
+    ],
+    "total_price": 31.98,
+    "status": "confirmed",
+    "guest_info": {
+      "name": "Jane Smith",
+      "phone": "555-5678",
+      "email": "jane@example.com"
+    },
+    "notes": "Allergic to nuts",
+    "createdAt": "2024-01-15T09:45:00.000Z",
+    "updatedAt": "2024-01-15T09:50:00.000Z"
+  },
+  {
+    "_id": "order-3",
+    "restaurant": "test-restaurant-id",
+    "customer": "customer-3",
+    "items": [
+      {
+        "_id": "item-5",
+        "name": "Chicken Wings",
+        "price": 14.99,
+        "quantity": 12,
+        "modifications": ["Extra spicy", "Blue cheese sauce"]
+      },
+      {
+        "_id": "item-6",
+        "name": "French Fries",
+        "price": 4.99,
+        "quantity": 1,
+        "modifications": ["Extra salt"]
+      }
+    ],
+    "total_price": 19.98,
+    "status": "in_kitchen",
+    "guest_info": {
+      "name": "Bob Wilson",
+      "phone": "555-9999",
+      "email": "bob@example.com"
+    },
+    "notes": "Spicy sauce on the side please",
+    "createdAt": "2024-01-15T09:15:00.000Z",
+    "updatedAt": "2024-01-15T09:30:00.000Z"
+  },
+  {
+    "_id": "order-4",
+    "restaurant": "test-restaurant-id",
+    "customer": null,
+    "items": [
+      {
+        "_id": "item-7",
+        "name": "Pepperoni Pizza",
+        "price": 18.99,
+        "quantity": 1,
+        "modifications": ["Extra pepperoni"]
+      }
+    ],
+    "total_price": 18.99,
+    "status": "received",
+    "guest_info": {
+      "name": "Guest Customer",
+      "phone": "555-0000",
+      "email": "guest@example.com"
+    },
+    "notes": "",
+    "createdAt": "2024-01-15T10:15:00.000Z",
+    "updatedAt": "2024-01-15T10:15:00.000Z"
+  },
+  {
+    "_id": "order-5",
+    "restaurant": "test-restaurant-id",
+    "customer": "customer-4",
+    "items": [
+      {
+        "_id": "item-8",
+        "name": "Mushroom Risotto",
+        "price": 22.99,
+        "quantity": 1,
+        "modifications": ["Gluten-free", "Extra mushrooms"]
+      },
+      {
+        "_id": "item-9",
+        "name": "House Salad",
+        "price": 8.99,
+        "quantity": 1,
+        "modifications": ["Vinaigrette dressing"]
+      }
+    ],
+    "total_price": 31.98,
+    "status": "confirmed",
+    "guest_info": {
+      "name": "Alice Johnson",
+      "phone": "555-7777",
+      "email": "alice@example.com"
+    },
+    "notes": "Gluten-free meal - please use separate prep area",
+    "createdAt": "2024-01-15T09:30:00.000Z",
+    "updatedAt": "2024-01-15T09:35:00.000Z"
+  }
+] 
