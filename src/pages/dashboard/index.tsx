@@ -75,6 +75,11 @@ const Dashboard = () => {
                   Test Analytics Dashboard
                 </span>
               </Link>
+              <Link href={`/kitchen/${mockRestaurantId}`}>
+                <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                  Test Kitchen Display
+                </span>
+              </Link>
             </div>
           </div>
         )}
@@ -131,7 +136,7 @@ const Dashboard = () => {
                       {restaurant.status.charAt(0).toUpperCase() + restaurant.status.slice(1)}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                     <Link href={`/dashboard/restaurants/${restaurant._id}`}>
                       <span className="block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
                         Manage
@@ -150,6 +155,11 @@ const Dashboard = () => {
                     <Link href={`/dashboard/analytics/${restaurant._id}`}>
                       <span className="block text-center bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
                         Analytics
+                      </span>
+                    </Link>
+                    <Link href={`/kitchen/${restaurant._id}`}>
+                      <span className="block text-center bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                        Kitchen
                       </span>
                     </Link>
                   </div>

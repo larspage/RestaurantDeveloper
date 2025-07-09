@@ -191,7 +191,7 @@ const RestaurantDetail = () => {
                 </div>
               </div>
               
-              <div className="border-t border-gray-200 pt-6 mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="border-t border-gray-200 pt-6 mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 <button
                   onClick={() => router.push(`/dashboard/menus/${restaurant?._id}`)}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
@@ -209,6 +209,12 @@ const RestaurantDetail = () => {
                   className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded transition-colors"
                 >
                   Analytics
+                </button>
+                <button
+                  onClick={() => router.push(`/kitchen/${restaurant?._id}`)}
+                  className="bg-gray-800 hover:bg-gray-900 text-white font-medium py-2 px-4 rounded transition-colors"
+                >
+                  Kitchen Display
                 </button>
                 <button
                   onClick={() => router.push(`/dashboard/restaurants/${restaurant?._id}/settings`)}
