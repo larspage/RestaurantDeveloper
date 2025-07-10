@@ -1,0 +1,165 @@
+{
+  "printers": [
+    {
+      "id": "printer001",
+      "name": "Kitchen Printer 1",
+      "type": "kitchen",
+      "connection_type": "network",
+      "ip_address": "192.168.1.100",
+      "port": 9100,
+      "auto_print_orders": true,
+      "enabled": true,
+      "status": "online",
+      "last_checked": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": "printer002",
+      "name": "Receipt Printer 1",
+      "type": "receipt",
+      "connection_type": "usb",
+      "usb_device": "/dev/usb/lp0",
+      "auto_print_orders": false,
+      "enabled": true,
+      "status": "offline",
+      "last_checked": "2024-01-01T11:30:00Z",
+      "created_at": "2024-01-01T10:15:00Z"
+    },
+    {
+      "id": "printer003",
+      "name": "Label Printer 1",
+      "type": "label",
+      "connection_type": "bluetooth",
+      "auto_print_orders": false,
+      "enabled": false,
+      "status": "error",
+      "last_checked": "2024-01-01T11:00:00Z",
+      "created_at": "2024-01-01T10:30:00Z"
+    }
+  ],
+  "printJobs": [
+    {
+      "id": "job001",
+      "order_id": "order001",
+      "printer_id": "printer001",
+      "print_type": "kitchen",
+      "status": "completed",
+      "created_at": "2024-01-01T12:15:00Z",
+      "completed_at": "2024-01-01T12:15:30Z",
+      "attempts": 1,
+      "max_attempts": 3
+    },
+    {
+      "id": "job002",
+      "order_id": "order002",
+      "printer_id": "printer002",
+      "print_type": "receipt",
+      "status": "failed",
+      "created_at": "2024-01-01T12:20:00Z",
+      "attempts": 2,
+      "max_attempts": 3,
+      "error": "Printer communication error"
+    },
+    {
+      "id": "job003",
+      "order_id": "order003",
+      "printer_id": "printer001",
+      "print_type": "kitchen",
+      "status": "queued",
+      "created_at": "2024-01-01T12:25:00Z",
+      "attempts": 0,
+      "max_attempts": 3
+    },
+    {
+      "id": "job004",
+      "order_id": "order004",
+      "printer_id": "printer002",
+      "print_type": "receipt",
+      "status": "printing",
+      "created_at": "2024-01-01T12:30:00Z",
+      "attempts": 1,
+      "max_attempts": 3
+    }
+  ],
+  "printerTypes": [
+    {
+      "value": "kitchen",
+      "label": "Kitchen Printer",
+      "description": "For kitchen tickets and order preparation"
+    },
+    {
+      "value": "receipt",
+      "label": "Receipt Printer", 
+      "description": "For customer receipts and order confirmations"
+    },
+    {
+      "value": "label",
+      "label": "Label Printer",
+      "description": "For order labels and packaging"
+    }
+  ],
+  "connectionTypes": [
+    {
+      "value": "network",
+      "label": "Network (IP)",
+      "description": "Connect via network IP address"
+    },
+    {
+      "value": "usb",
+      "label": "USB",
+      "description": "Connect via USB cable"
+    },
+    {
+      "value": "bluetooth",
+      "label": "Bluetooth",
+      "description": "Connect via Bluetooth pairing"
+    }
+  ],
+  "testScenarios": {
+    "networkPrinter": {
+      "name": "Test Kitchen Printer",
+      "type": "kitchen",
+      "connection_type": "network",
+      "ip_address": "192.168.1.200",
+      "port": 9100,
+      "auto_print_orders": true,
+      "enabled": true
+    },
+    "usbPrinter": {
+      "name": "Test Receipt Printer",
+      "type": "receipt",
+      "connection_type": "usb",
+      "usb_device": "/dev/usb/lp1",
+      "auto_print_orders": false,
+      "enabled": true
+    },
+    "bluetoothPrinter": {
+      "name": "Test Label Printer",
+      "type": "label",
+      "connection_type": "bluetooth",
+      "auto_print_orders": false,
+      "enabled": true
+    },
+    "invalidNetworkPrinter": {
+      "name": "Invalid Network Printer",
+      "type": "kitchen",
+      "connection_type": "network"
+    },
+    "invalidUsbPrinter": {
+      "name": "Invalid USB Printer",
+      "type": "receipt",
+      "connection_type": "usb"
+    }
+  },
+  "statusColors": {
+    "online": "bg-green-100 text-green-800",
+    "offline": "bg-gray-100 text-gray-800",
+    "error": "bg-red-100 text-red-800"
+  },
+  "printJobStatusColors": {
+    "queued": "bg-yellow-100 text-yellow-800",
+    "printing": "bg-blue-100 text-blue-800",
+    "completed": "bg-green-100 text-green-800",
+    "failed": "bg-red-100 text-red-800"
+  }
+} 

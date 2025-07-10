@@ -211,7 +211,46 @@ const restaurantSchema = new mongoose.Schema({
         notification_frequency: { type: String, enum: ['immediate', 'batched_15min', 'batched_1hour'], default: 'immediate' }
       }
     }
-  }
+  },
+  // Printer Settings
+  printer_settings: {
+    printers: [{
+      id: { type: String, required: true },
+      name: { type: String, required: true, trim: true },
+      type: { type: String, enum: ['kitchen', 'receipt', 'label'], required: true },
+      connection_type: { type: String, enum: ['network', 'usb', 'bluetooth'], required: true },
+      ip_address: { type: String, trim: true },
+      port: { type: Number },
+      usb_device: { type: String, trim: true },
+      auto_print_orders: { type: Boolean, default: false },
+      enabled: { type: Boolean, default: true },
+      status: { type: String, enum: ['online', 'offline', 'error'], default: 'offline' },
+      last_checked: { type: Date, default: Date.now },
+      created_at: { type: Date, default: Date.now },
+      updated_at: { type: Date, default: Date.now }
+    }],
+    auto_print_settings: {
+      kitchen_enabled: { type: Boolean, default: false },
+      receipt_enabled: { type: Boolean, default: false },
+      label_enabled: { type: Boolean, default: false },
+      print_on_new_order: { type: Boolean, default: false },
+      print_on_status_change: { type: Boolean, default: false }
+    }
+  },
+  // Print Queue
+  print_queue: [{
+    id: { type: String, required: true },
+    order_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
+    printer_id: { type: String, required: true },
+    print_type: { type: String, enum: ['kitchen', 'receipt', 'label'], required: true },
+    status: { type: String, enum: ['queued', 'printing', 'completed', 'failed'], default: 'queued' },
+    created_at: { type: Date, default: Date.now },
+    completed_at: { type: Date },
+    attempts: { type: Number, default: 0 },
+    max_attempts: { type: Number, default: 3 },
+    error: { type: String },
+    retry_at: { type: Date }
+  }]
 }, {
   timestamps: true
 });

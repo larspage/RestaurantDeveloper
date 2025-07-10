@@ -1,0 +1,343 @@
+const request = require('supertest');
+const app = require('../app');
+const Restaurant = require('../models/Restaurant');
+const Order = require('../models/Order');
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+
+describe('Printer Routes', () => {
+  let authToken;
+  let userId;
+  let restaurantId;
+  let orderId;
+  let printerId;
+
+  beforeAll(async () => {
+    // Create test user
+    const user = await User.create({
+      name: 'Test User',
+      email: 'test@example.com',
+      password: 'password123',
+      role: 'user'
+    });
+    userId = user._id;
+    authToken = jwt.sign({ id: userId }, process.env.JWT_SECRET);
+
+    // Create test restaurant
+    const restaurant = await Restaurant.create({
+      name: 'Test Restaurant',
+      description: 'Test Description',
+      location: 'Test Location',
+      cuisine: ['Italian'],
+      owner: userId
+    });
+    restaurantId = restaurant._id;
+
+    // Create test order
+    const order = await Order.create({
+      restaurant: restaurantId,
+      items: [
+        { name: 'Pizza', price: 15.99, quantity: 1 }
+      ],
+      total_price: 15.99,
+      status: 'received',
+      guest_info: {
+        name: 'John Doe',
+        phone: '123-456-7890',
+        email: 'john@example.com'
+      }
+    });
+    orderId = order._id;
+  });
+
+  afterAll(async () => {
+    // Clean up test data
+    await User.deleteMany({});
+    await Restaurant.deleteMany({});
+    await Order.deleteMany({});
+  });
+
+  describe('GET /printers/restaurants/:id/printers', () => {
+    it('should return empty array when no printers configured', async () => {
+      const response = await request(app)
+        .get(`/printers/restaurants/${restaurantId}/printers`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([]);
+    });
+
+    it('should return 401 without authentication', async () => {
+      const response = await request(app)
+        .get(`/printers/restaurants/${restaurantId}/printers`);
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 404 for non-existent restaurant', async () => {
+      const response = await request(app)
+        .get('/printers/restaurants/507f1f77bcf86cd799439011/printers')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('POST /printers/restaurants/:id/printers', () => {
+    it('should create a new network printer', async () => {
+      const printerData = {
+        name: 'Kitchen Printer 1',
+        type: 'kitchen',
+        connection_type: 'network',
+        ip_address: '192.168.1.100',
+        port: 9100,
+        auto_print_orders: true,
+        enabled: true
+      };
+
+      const response = await request(app)
+        .post(`/printers/restaurants/${restaurantId}/printers`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(printerData);
+
+      expect(response.status).toBe(200);
+      expect(response.body.name).toBe(printerData.name);
+      expect(response.body.type).toBe(printerData.type);
+      expect(response.body.connection_type).toBe(printerData.connection_type);
+      expect(response.body.ip_address).toBe(printerData.ip_address);
+      expect(response.body.port).toBe(printerData.port);
+      expect(response.body.id).toBeDefined();
+      
+      printerId = response.body.id;
+    });
+
+    it('should create a new USB printer', async () => {
+      const printerData = {
+        name: 'Receipt Printer 1',
+        type: 'receipt',
+        connection_type: 'usb',
+        usb_device: '/dev/usb/lp0',
+        auto_print_orders: false,
+        enabled: true
+      };
+
+      const response = await request(app)
+        .post(`/printers/restaurants/${restaurantId}/printers`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(printerData);
+
+      expect(response.status).toBe(200);
+      expect(response.body.name).toBe(printerData.name);
+      expect(response.body.type).toBe(printerData.type);
+      expect(response.body.connection_type).toBe(printerData.connection_type);
+      expect(response.body.usb_device).toBe(printerData.usb_device);
+    });
+
+    it('should return 400 for missing required fields', async () => {
+      const printerData = {
+        name: 'Incomplete Printer'
+        // Missing type and connection_type
+      };
+
+      const response = await request(app)
+        .post(`/printers/restaurants/${restaurantId}/printers`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(printerData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+
+    it('should return 400 for network printer without IP', async () => {
+      const printerData = {
+        name: 'Network Printer',
+        type: 'kitchen',
+        connection_type: 'network'
+        // Missing ip_address and port
+      };
+
+      const response = await request(app)
+        .post(`/printers/restaurants/${restaurantId}/printers`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(printerData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('IP address');
+    });
+
+    it('should return 400 for USB printer without device path', async () => {
+      const printerData = {
+        name: 'USB Printer',
+        type: 'receipt',
+        connection_type: 'usb'
+        // Missing usb_device
+      };
+
+      const response = await request(app)
+        .post(`/printers/restaurants/${restaurantId}/printers`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(printerData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('USB device');
+    });
+  });
+
+  describe('PUT /printers/restaurants/:id/printers/:printerId', () => {
+    it('should update printer configuration', async () => {
+      const updateData = {
+        name: 'Updated Kitchen Printer',
+        enabled: false
+      };
+
+      const response = await request(app)
+        .put(`/printers/restaurants/${restaurantId}/printers/${printerId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData);
+
+      expect(response.status).toBe(200);
+      expect(response.body.name).toBe(updateData.name);
+      expect(response.body.enabled).toBe(updateData.enabled);
+    });
+
+    it('should return 404 for non-existent printer', async () => {
+      const updateData = { name: 'Updated Printer' };
+
+      const response = await request(app)
+        .put(`/printers/restaurants/${restaurantId}/printers/nonexistent`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('POST /printers/restaurants/:id/printers/:printerId/test', () => {
+    it('should test printer connection', async () => {
+      const response = await request(app)
+        .post(`/printers/restaurants/${restaurantId}/printers/${printerId}/test`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBeDefined();
+      expect(response.body.message).toBeDefined();
+      expect(response.body.timestamp).toBeDefined();
+    });
+
+    it('should return 404 for non-existent printer', async () => {
+      const response = await request(app)
+        .post(`/printers/restaurants/${restaurantId}/printers/nonexistent/test`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('POST /printers/orders/:id/print', () => {
+    it('should create print job for order', async () => {
+      const printData = {
+        printer_id: printerId,
+        print_type: 'kitchen'
+      };
+
+      const response = await request(app)
+        .post(`/printers/orders/${orderId}/print`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(printData);
+
+      expect(response.status).toBe(200);
+      expect(response.body.order_id).toBe(orderId.toString());
+      expect(response.body.printer_id).toBe(printerId);
+      expect(response.body.print_type).toBe('kitchen');
+      expect(response.body.status).toBe('queued');
+    });
+
+    it('should return 400 for missing print data', async () => {
+      const response = await request(app)
+        .post(`/printers/orders/${orderId}/print`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+
+    it('should return 404 for non-existent order', async () => {
+      const printData = {
+        printer_id: printerId,
+        print_type: 'kitchen'
+      };
+
+      const response = await request(app)
+        .post('/printers/orders/507f1f77bcf86cd799439011/print')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(printData);
+
+      expect(response.status).toBe(404);
+    });
+
+    it('should return 404 for non-existent printer', async () => {
+      const printData = {
+        printer_id: 'nonexistent',
+        print_type: 'kitchen'
+      };
+
+      const response = await request(app)
+        .post(`/printers/orders/${orderId}/print`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(printData);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('GET /printers/print-queue/:restaurant_id', () => {
+    it('should return print queue for restaurant', async () => {
+      const response = await request(app)
+        .get(`/printers/print-queue/${restaurantId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.length).toBeGreaterThan(0);
+    });
+
+    it('should return 404 for non-existent restaurant', async () => {
+      const response = await request(app)
+        .get('/printers/print-queue/507f1f77bcf86cd799439011')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('DELETE /printers/restaurants/:id/printers/:printerId', () => {
+    it('should delete printer', async () => {
+      const response = await request(app)
+        .delete(`/printers/restaurants/${restaurantId}/printers/${printerId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toContain('deleted');
+    });
+
+    it('should return 404 for non-existent printer', async () => {
+      const response = await request(app)
+        .delete(`/printers/restaurants/${restaurantId}/printers/nonexistent`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('GET /printers/restaurants/:id/printers after deletion', () => {
+    it('should return empty array after printer deletion', async () => {
+      const response = await request(app)
+        .get(`/printers/restaurants/${restaurantId}/printers`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([]);
+    });
+  });
+}); 

@@ -29,6 +29,7 @@ const restaurantRoutes = require('./routes/restaurants');
 const menuRoutes = require('./routes/menus');
 const orderRoutes = require('./routes/orders');
 const themeRoutes = require('./routes/themes');
+const printerRoutes = require('./routes/printers');
 
 const app = express();
 
@@ -72,6 +73,7 @@ app.use('/restaurants', restaurantRoutes);
 app.use('/menus', menuRoutes);
 app.use('/orders', orderRoutes);
 app.use('/themes', themeRoutes);
+app.use('/printers', printerRoutes);
 
 // Error handling middleware (logging is handled by middleware)
 app.use((err, req, res, next) => {
