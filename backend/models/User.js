@@ -13,6 +13,13 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  // Email stored for development mode authentication
+  // In production, this would be in Supabase only
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true
+  },
   role: {
     type: String,
     required: true,

@@ -79,11 +79,11 @@ describe('PrinterService', () => {
     };
 
     it('should create a new printer successfully', async () => {
-      mockedApi.post.mockResolvedValue({ data: mockPrinter });
+      mockApi.post.mockResolvedValue({ data: mockPrinter });
 
       const result = await printerService.createPrinter(mockRestaurantId, mockCreateData);
 
-      expect(mockedApi.post).toHaveBeenCalledWith(
+      expect(mockApi.post).toHaveBeenCalledWith(
         `/printers/restaurants/${mockRestaurantId}/printers`,
         mockCreateData
       );
@@ -91,7 +91,7 @@ describe('PrinterService', () => {
     });
 
     it('should handle creation errors', async () => {
-      mockedApi.post.mockRejectedValue(new Error('Creation failed'));
+      mockApi.post.mockRejectedValue(new Error('Creation failed'));
 
       await expect(printerService.createPrinter(mockRestaurantId, mockCreateData))
         .rejects.toThrow('Creation failed');
@@ -106,11 +106,11 @@ describe('PrinterService', () => {
 
     it('should update printer successfully', async () => {
       const updatedPrinter = { ...mockPrinter, ...mockUpdateData };
-      mockedApi.put.mockResolvedValue({ data: updatedPrinter });
+      mockApi.put.mockResolvedValue({ data: updatedPrinter });
 
       const result = await printerService.updatePrinter(mockRestaurantId, mockPrinterId, mockUpdateData);
 
-      expect(mockedApi.put).toHaveBeenCalledWith(
+      expect(mockApi.put).toHaveBeenCalledWith(
         `/printers/restaurants/${mockRestaurantId}/printers/${mockPrinterId}`,
         mockUpdateData
       );
@@ -120,11 +120,11 @@ describe('PrinterService', () => {
 
   describe('deletePrinter', () => {
     it('should delete printer successfully', async () => {
-      mockedApi.delete.mockResolvedValue({});
+      mockApi.delete.mockResolvedValue({});
 
       await printerService.deletePrinter(mockRestaurantId, mockPrinterId);
 
-      expect(mockedApi.delete).toHaveBeenCalledWith(
+      expect(mockApi.delete).toHaveBeenCalledWith(
         `/printers/restaurants/${mockRestaurantId}/printers/${mockPrinterId}`
       );
     });
@@ -133,11 +133,11 @@ describe('PrinterService', () => {
   describe('testPrinter', () => {
     it('should test printer connection successfully', async () => {
       const testResult = { success: true, message: 'Test successful', timestamp: '2024-01-01T00:00:00Z' };
-      mockedApi.post.mockResolvedValue({ data: testResult });
+      mockApi.post.mockResolvedValue({ data: testResult });
 
       const result = await printerService.testPrinter(mockRestaurantId, mockPrinterId);
 
-      expect(mockedApi.post).toHaveBeenCalledWith(
+      expect(mockApi.post).toHaveBeenCalledWith(
         `/printers/restaurants/${mockRestaurantId}/printers/${mockPrinterId}/test`
       );
       expect(result).toEqual(testResult);
@@ -145,7 +145,7 @@ describe('PrinterService', () => {
 
     it('should handle test failures', async () => {
       const testResult = { success: false, message: 'Connection failed', timestamp: '2024-01-01T00:00:00Z' };
-      mockedApi.post.mockResolvedValue({ data: testResult });
+      mockApi.post.mockResolvedValue({ data: testResult });
 
       const result = await printerService.testPrinter(mockRestaurantId, mockPrinterId);
 
@@ -161,11 +161,11 @@ describe('PrinterService', () => {
     };
 
     it('should create print job successfully', async () => {
-      mockedApi.post.mockResolvedValue({ data: mockPrintJob });
+      mockApi.post.mockResolvedValue({ data: mockPrintJob });
 
       const result = await printerService.printOrder(mockOrderId, printData);
 
-      expect(mockedApi.post).toHaveBeenCalledWith(
+      expect(mockApi.post).toHaveBeenCalledWith(
         `/printers/orders/${mockOrderId}/print`,
         printData
       );
@@ -175,11 +175,11 @@ describe('PrinterService', () => {
 
   describe('getPrintQueue', () => {
     it('should fetch print queue successfully', async () => {
-      mockedApi.get.mockResolvedValue({ data: [mockPrintJob] });
+      mockApi.get.mockResolvedValue({ data: [mockPrintJob] });
 
       const result = await printerService.getPrintQueue(mockRestaurantId);
 
-      expect(mockedApi.get).toHaveBeenCalledWith(`/printers/print-queue/${mockRestaurantId}`);
+      expect(mockApi.get).toHaveBeenCalledWith(`/printers/print-queue/${mockRestaurantId}`);
       expect(result).toEqual([mockPrintJob]);
     });
   });
@@ -187,11 +187,11 @@ describe('PrinterService', () => {
   describe('retryPrintJob', () => {
     it('should retry failed print job successfully', async () => {
       const retriedJob = { ...mockPrintJob, attempts: 2 };
-      mockedApi.post.mockResolvedValue({ data: retriedJob });
+      mockApi.post.mockResolvedValue({ data: retriedJob });
 
       const result = await printerService.retryPrintJob(mockRestaurantId, mockPrintJob.id);
 
-      expect(mockedApi.post).toHaveBeenCalledWith(
+      expect(mockApi.post).toHaveBeenCalledWith(
         `/printers/print-queue/${mockRestaurantId}/${mockPrintJob.id}/retry`
       );
       expect(result).toEqual(retriedJob);

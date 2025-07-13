@@ -329,7 +329,7 @@ const MenuManagement = () => {
       
       const result = await menuService.addOrUpdateItem(restaurantId as string, sectionId, newItem);
       
-      // Update local state
+      // Update local state with the new item
       const updatedMenu = {
         ...menu!,
         sections: menu!.sections.map(section => {
@@ -345,6 +345,9 @@ const MenuManagement = () => {
       
       setMenu(updatedMenu);
       setError(null);
+      
+      // Automatically start editing the new item
+      setEditingItem(result);
     } catch (err) {
       console.error('Failed to add item:', err);
       setError('Failed to add menu item. Please try again.');

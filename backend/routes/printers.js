@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Restaurant = require('../models/Restaurant');
 const Order = require('../models/Order');
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
 // Get all printers for a restaurant
-router.get('/restaurants/:id/printers', auth, async (req, res) => {
+router.get('/restaurants/:id/printers', authenticateToken, async (req, res) => {
   try {
     const restaurant = await Restaurant.findOne({
       _id: req.params.id,
@@ -26,7 +26,7 @@ router.get('/restaurants/:id/printers', auth, async (req, res) => {
 });
 
 // Add/Update printer configuration
-router.post('/restaurants/:id/printers', auth, async (req, res) => {
+router.post('/restaurants/:id/printers', authenticateToken, async (req, res) => {
   try {
     const restaurant = await Restaurant.findOne({
       _id: req.params.id,
@@ -85,7 +85,7 @@ router.post('/restaurants/:id/printers', auth, async (req, res) => {
 });
 
 // Update printer configuration
-router.put('/restaurants/:id/printers/:printerId', auth, async (req, res) => {
+router.put('/restaurants/:id/printers/:printerId', authenticateToken, async (req, res) => {
   try {
     const restaurant = await Restaurant.findOne({
       _id: req.params.id,
@@ -129,7 +129,7 @@ router.put('/restaurants/:id/printers/:printerId', auth, async (req, res) => {
 });
 
 // Delete printer
-router.delete('/restaurants/:id/printers/:printerId', auth, async (req, res) => {
+router.delete('/restaurants/:id/printers/:printerId', authenticateToken, async (req, res) => {
   try {
     const restaurant = await Restaurant.findOne({
       _id: req.params.id,
@@ -160,7 +160,7 @@ router.delete('/restaurants/:id/printers/:printerId', auth, async (req, res) => 
 });
 
 // Test printer connection
-router.post('/restaurants/:id/printers/:printerId/test', auth, async (req, res) => {
+router.post('/restaurants/:id/printers/:printerId/test', authenticateToken, async (req, res) => {
   try {
     const restaurant = await Restaurant.findOne({
       _id: req.params.id,
@@ -203,7 +203,7 @@ router.post('/restaurants/:id/printers/:printerId/test', auth, async (req, res) 
 });
 
 // Print order
-router.post('/orders/:id/print', auth, async (req, res) => {
+router.post('/orders/:id/print', authenticateToken, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate('restaurant');
     
@@ -285,7 +285,7 @@ router.post('/orders/:id/print', auth, async (req, res) => {
 });
 
 // Get print queue for restaurant
-router.get('/print-queue/:restaurant_id', auth, async (req, res) => {
+router.get('/print-queue/:restaurant_id', authenticateToken, async (req, res) => {
   try {
     const restaurant = await Restaurant.findOne({
       _id: req.params.restaurant_id,
@@ -309,7 +309,7 @@ router.get('/print-queue/:restaurant_id', auth, async (req, res) => {
 });
 
 // Retry failed print job
-router.post('/print-queue/:restaurant_id/:job_id/retry', auth, async (req, res) => {
+router.post('/print-queue/:restaurant_id/:job_id/retry', authenticateToken, async (req, res) => {
   try {
     const restaurant = await Restaurant.findOne({
       _id: req.params.restaurant_id,

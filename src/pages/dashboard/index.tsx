@@ -61,22 +61,34 @@ const Dashboard = () => {
             </p>
             <div className="flex flex-wrap gap-2">
               <Link href={`/dashboard/menus/${mockRestaurantId}`}>
-                <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                <span className="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                   Test Menu Management
                 </span>
               </Link>
               <Link href={`/dashboard/restaurants/${mockRestaurantId}`}>
-                <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                <span className="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
                   Test Restaurant Management
                 </span>
               </Link>
               <Link href={`/dashboard/analytics/${mockRestaurantId}`}>
-                <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                <span className="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
                   Test Analytics Dashboard
                 </span>
               </Link>
               <Link href={`/kitchen/${mockRestaurantId}`}>
-                <span className="block text-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                <span className="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors cursor-pointer">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                  </svg>
                   Test Kitchen Display
                 </span>
               </Link>

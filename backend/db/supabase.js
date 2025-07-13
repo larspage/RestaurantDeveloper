@@ -138,19 +138,32 @@ const createUser = async (email, password) => {
 // Sign in with email and password
 const signInWithPassword = async (email, password) => {
   if (isTestMode || !hasSupabaseConfig) {
-    // Return mock authentication in test mode or when Supabase is not configured
-    const userIdSuffix = email.replace('@', '-').replace('.', '-');
-    const userId = isTestMode ? `test-user-${userIdSuffix}` : `dev-user-${userIdSuffix}`;
-    console.log(`Authenticating ${isTestMode ? 'test' : 'development'} user:`, email);
+    // In development mode, we need to find the actual user from MongoDB
+    // to get the correct supabase_id that was created during signup
+    const User = require('../models/User');
     
-    return {
-      user: { 
-        id: userId, 
-        email,
-        user_metadata: { name: 'Development User' }
-      },
-      token: `dev.jwt.token.${userId}`
-    };
+    try {
+      // Find user by email in MongoDB (this requires adding email to User model)
+      const mongoUser = await User.findOne({ email: email });
+      
+      if (!mongoUser) {
+        throw new Error('Invalid credentials');
+      }
+      
+      console.log(`Authenticating ${isTestMode ? 'test' : 'development'} user:`, email);
+      
+      return {
+        user: { 
+          id: mongoUser.supabase_id, 
+          email: email,
+          user_metadata: { name: mongoUser.name }
+        },
+        token: `dev.jwt.token.${mongoUser.supabase_id}`
+      };
+    } catch (error) {
+      console.error('Development authentication error:', error);
+      throw new Error('Invalid credentials');
+    }
   }
   
   try {

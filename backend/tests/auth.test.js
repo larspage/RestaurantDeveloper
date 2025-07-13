@@ -54,10 +54,11 @@ describe('Authentication Endpoints', () => {
       expect(response.body.user.name).toBe('Test User');
       expect(response.body.user.role).toBe('customer');
 
-      // Verify user was created in MongoDB
+      // Verify user was created in MongoDB with email field
       const mongoUser = await User.findOne({ supabase_id: 'test-uuid-123' });
       expect(mongoUser).toBeTruthy();
       expect(mongoUser.name).toBe('Test User');
+      expect(mongoUser.email).toBe('test@example.com'); // Email now stored in MongoDB
       expect(mongoUser.role).toBe('customer');
     });
 
@@ -82,9 +83,10 @@ describe('Authentication Endpoints', () => {
 
       expect(response.body.user.role).toBe('restaurant_owner');
 
-      // Verify restaurant_id was set in MongoDB
+      // Verify restaurant_id and email were set in MongoDB
       const mongoUser = await User.findOne({ supabase_id: 'owner-uuid-123' });
       expect(mongoUser.restaurant_id).toBe('restaurant-uuid-123');
+      expect(mongoUser.email).toBe('owner@restaurant.com'); // Email now stored in MongoDB
     });
 
     it('should return error for missing required fields', async () => {
@@ -114,9 +116,44 @@ describe('Authentication Endpoints', () => {
     });
   });
 
+  describe('POST /auth/signup', () => {
+    it('should create a new user successfully via signup endpoint', async () => {
+      // Mock Supabase createUser function
+      createUser.mockResolvedValue({
+        id: 'signup-uuid-123',
+        email: 'signup@example.com'
+      });
+
+      const userData = {
+        email: 'signup@example.com',
+        password: 'password123',
+        name: 'Signup User',
+        role: 'restaurant_owner'
+      };
+
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(userData)
+        .expect(201);
+
+      expect(response.body.message).toBe('User registered successfully');
+      expect(response.body.user.user_id).toBe('signup-uuid-123');
+      expect(response.body.user.email).toBe('signup@example.com');
+      expect(response.body.user.name).toBe('Signup User');
+      expect(response.body.user.role).toBe('restaurant_owner');
+
+      // Verify user was created in MongoDB with email field
+      const mongoUser = await User.findOne({ supabase_id: 'signup-uuid-123' });
+      expect(mongoUser).toBeTruthy();
+      expect(mongoUser.name).toBe('Signup User');
+      expect(mongoUser.email).toBe('signup@example.com'); // Email now stored in MongoDB
+      expect(mongoUser.role).toBe('restaurant_owner');
+    });
+  });
+
   describe('POST /auth/login', () => {
     beforeEach(async () => {
-      // Create a test user in MongoDB
+      // Create a test user in MongoDB with email field
       await User.create({
         supabase_id: 'test-user-123',
         email: 'test@example.com',
@@ -147,6 +184,7 @@ describe('Authentication Endpoints', () => {
       expect(response.body.token).toBe('mock-jwt-token');
       expect(response.body.user.user_id).toBe('test-user-123');
       expect(response.body.user.name).toBe('Test User');
+      expect(response.body.user.email).toBe('test@example.com'); // Email returned from MongoDB
     });
 
     it('should return error for missing credentials', async () => {
@@ -159,6 +197,27 @@ describe('Authentication Endpoints', () => {
         .expect(400);
 
       expect(response.body.error).toBe('Email and password are required');
+    });
+
+    it('should return error when user profile not found in MongoDB', async () => {
+      // Mock Supabase login success but user not in MongoDB
+      signInWithPassword.mockResolvedValue({
+        user: {
+          id: 'non-existent-user-123',
+          email: 'nonexistent@example.com'
+        },
+        token: 'mock-jwt-token'
+      });
+
+      const response = await request(app)
+        .post('/auth/login')
+        .send({
+          email: 'nonexistent@example.com',
+          password: 'password123'
+        })
+        .expect(404);
+
+      expect(response.body.error).toBe('User profile not found - please complete registration');
     });
   });
 
@@ -188,6 +247,7 @@ describe('Authentication Endpoints', () => {
 
       expect(response.body.user.user_id).toBe('test-user-123');
       expect(response.body.user.name).toBe('Test User');
+      expect(response.body.user.email).toBe('test@example.com'); // Email returned from MongoDB
       expect(response.body.user.role).toBe('customer');
     });
 

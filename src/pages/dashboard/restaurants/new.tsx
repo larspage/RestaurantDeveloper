@@ -12,6 +12,27 @@ const NewRestaurant = () => {
     cuisine: '',
     theme: ''
   });
+  const [addressData, setAddressData] = useState({
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: ''
+  });
+  const [contactData, setContactData] = useState({
+    phone: '',
+    fax: ''
+  });
+  const [customCuisine, setCustomCuisine] = useState('');
+  const [showCustomCuisine, setShowCustomCuisine] = useState(false);
+  
+  // Common cuisine types
+  const cuisineTypes = [
+    'American', 'Italian', 'Mexican', 'Chinese', 'Japanese', 'Indian', 'Thai', 'French', 
+    'Mediterranean', 'Greek', 'Korean', 'Vietnamese', 'Brazilian', 'Peruvian', 'Spanish',
+    'German', 'British', 'Russian', 'Lebanese', 'Moroccan', 'Ethiopian', 'Cajun',
+    'Seafood', 'Steakhouse', 'BBQ', 'Pizza', 'Sushi', 'Vegetarian', 'Vegan', 'Fusion'
+  ];
   const [themes, setThemes] = useState<Theme[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isThemesLoading, setIsThemesLoading] = useState(true);
@@ -43,6 +64,33 @@ const NewRestaurant = () => {
     }));
   };
 
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAddressData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setContactData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleCuisineChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === 'Other') {
+      setShowCustomCuisine(true);
+      setFormData((prev) => ({ ...prev, cuisine: '' }));
+    } else {
+      setShowCustomCuisine(false);
+      setFormData((prev) => ({ ...prev, cuisine: value }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -50,7 +98,24 @@ const NewRestaurant = () => {
       setIsLoading(true);
       setError(null);
       
-      const newRestaurant = await restaurantService.createRestaurant(formData);
+      // Combine address fields into location
+      const fullAddress = [
+        addressData.street,
+        addressData.city,
+        addressData.state,
+        addressData.zipCode,
+        addressData.country
+      ].filter(Boolean).join(', ');
+      
+      const restaurantData = {
+        ...formData,
+        location: fullAddress || formData.location,
+        cuisine: showCustomCuisine ? customCuisine : formData.cuisine,
+        // Add contact info to description for now (can be expanded later)
+        description: `${formData.description}${contactData.phone ? `\n\nPhone: ${contactData.phone}` : ''}${contactData.fax ? `\nFax: ${contactData.fax}` : ''}`
+      };
+      
+      const newRestaurant = await restaurantService.createRestaurant(restaurantData);
       
       router.push(`/dashboard/restaurants/${newRestaurant._id}`);
     } catch (err) {
@@ -105,34 +170,120 @@ const NewRestaurant = () => {
             </div>
             
             <div className="mb-4">
-              <label htmlFor="location" className="block text-gray-700 text-sm font-bold mb-2">
-                Location *
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Address *
               </label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  name="street"
+                  placeholder="Street Address"
+                  value={addressData.street}
+                  onChange={handleAddressChange}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    name="city"
+                    placeholder="City"
+                    value={addressData.city}
+                    onChange={handleAddressChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="state"
+                    placeholder="State/Province"
+                    value={addressData.state}
+                    onChange={handleAddressChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    name="zipCode"
+                    placeholder="ZIP/Postal Code"
+                    value={addressData.zipCode}
+                    onChange={handleAddressChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="country"
+                    placeholder="Country"
+                    value={addressData.country}
+                    onChange={handleAddressChange}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Contact Information
+              </label>
+              <div className="space-y-3">
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Phone Number *"
+                  value={contactData.phone}
+                  onChange={handleContactChange}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+                <input
+                  type="tel"
+                  name="fax"
+                  placeholder="Fax Number (Optional)"
+                  value={contactData.fax}
+                  onChange={handleContactChange}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
+              </div>
             </div>
             
             <div className="mb-6">
               <label htmlFor="cuisine" className="block text-gray-700 text-sm font-bold mb-2">
                 Cuisine Type *
               </label>
-              <input
-                type="text"
+              <select
                 id="cuisine"
                 name="cuisine"
-                value={formData.cuisine}
-                onChange={handleChange}
+                value={showCustomCuisine ? 'Other' : formData.cuisine}
+                onChange={handleCuisineChange}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                placeholder="e.g., Italian, Mexican, Japanese"
                 required
-              />
+              >
+                <option value="">Select a cuisine type</option>
+                {cuisineTypes.map((cuisine) => (
+                  <option key={cuisine} value={cuisine}>
+                    {cuisine}
+                  </option>
+                ))}
+                <option value="Other">Other (specify below)</option>
+              </select>
+              
+              {showCustomCuisine && (
+                <div className="mt-3">
+                  <input
+                    type="text"
+                    placeholder="Enter your cuisine type"
+                    value={customCuisine}
+                    onChange={(e) => setCustomCuisine(e.target.value)}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required
+                  />
+                </div>
+              )}
             </div>
             
             <div className="mb-6">
