@@ -1,6 +1,16 @@
 # Restaurant Developer Tasks
 
-## Current Status: Build Mode - ESLint Configuration Fixed ✅
+## Current Status: Build Mode - Menu Item Editing Fix ⚠️
+
+### Currently Working On: Menu Item Editing Issue
+- **Issue**: "Item not found" error when updating/saving menu items
+- **Root Cause**: Frontend-backend ID mismatch and response handling issues
+- **Investigation**: Backend logs show item ID `6873c284db44f609cc18a046` not found in section items
+- **Fixes Applied**:
+  - Enhanced backend debugging with detailed ID comparison logging
+  - Fixed frontend `menuService.addOrUpdateItem()` to properly extract items from full menu response
+  - Updated frontend menu management to refresh menu data after add/update operations
+  - Added proper TypeScript null safety checks
 
 ### Recently Completed: ESLint Configuration Resolution
 - **Issue**: Jest test files were causing linting errors due to incompatible ESLint rules

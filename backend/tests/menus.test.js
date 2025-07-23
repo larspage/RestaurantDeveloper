@@ -1,6 +1,6 @@
 const request = require('supertest');
 const app = require('../app');
-const { getAuthToken } = require('./testUtils');
+const { getAuthToken, clearTestDB } = require('./testUtils');
 const Menu = require('../models/Menu');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
@@ -11,11 +11,14 @@ describe('Menu API Endpoints', () => {
   let testMenu;
 
   beforeEach(async () => {
-    // Create test owner
+    // Clear database before each test to avoid duplicate key errors
+    await clearTestDB();
+    
+    // Create test owner with unique ID
     testOwner = await User.create({
-      supabase_id: 'test-owner-123',
-      email: 'owner@test.com',
-      name: 'Test Owner',
+      supabase_id: `test-menu-owner-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: 'menu-owner@test.com',
+      name: 'Test Menu Owner',
       role: 'restaurant_owner'
     });
 
@@ -69,9 +72,8 @@ describe('Menu API Endpoints', () => {
   });
 
   afterEach(async () => {
-    await User.deleteMany({});
-    await Restaurant.deleteMany({});
-    await Menu.deleteMany({});
+    // Clean up after each test
+    await clearTestDB();
   });
 
   describe('GET /menus/:restaurant_id', () => {

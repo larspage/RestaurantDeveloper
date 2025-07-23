@@ -30,17 +30,21 @@ export default function Home() {
                 <Link href="/signup" className="btn-primary bg-white text-primary-700 hover:bg-gray-100 text-lg px-6 py-3 mb-4 sm:mb-0 sm:mr-4">
                   Get Started Free
                 </Link>
-                <Link href="/examples" className="btn-secondary border-white text-white hover:bg-primary-800 text-lg px-6 py-3">
+                <Link href="/examples" className="inline-block border-2 border-white text-white hover:bg-white hover:text-primary-700 transition-all duration-200 text-lg px-6 py-3 rounded-lg font-semibold bg-transparent">
                   View Examples
                 </Link>
               </div>
             </div>
             <div className="md:w-1/2">
-              <img 
-                src="/placeholder-restaurant.jpg" 
-                alt="Restaurant website preview" 
-                className="rounded-lg shadow-xl"
-              />
+              <div className="bg-white rounded-lg shadow-xl p-8 text-center">
+                <div className="text-primary-600 mb-4">
+                  <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Restaurant Website Preview</h3>
+                <p className="text-gray-600">Beautiful, mobile-responsive websites for your restaurant</p>
+              </div>
             </div>
           </div>
         </div>

@@ -56,7 +56,8 @@ if (dockerRunning) {
             
             // Check if bucket exists
             try {
-              const bucketExists = execSync('docker exec minio mc ls local | grep restaurant-menu-images').toString().trim() !== '';
+              const bucketList = execSync('docker exec minio mc ls local').toString();
+              const bucketExists = bucketList.includes('restaurant-menu-images');
               if (!bucketExists) {
                 console.log(`${colors.yellow}Creating 'restaurant-menu-images' bucket in MinIO...${colors.reset}`);
                 try {

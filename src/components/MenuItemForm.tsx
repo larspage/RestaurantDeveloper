@@ -18,10 +18,10 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
   isUploading,
   uploadProgress = 0
 }) => {
-  const [name, setName] = useState(item.name);
-  const [description, setDescription] = useState(item.description);
-  const [price, setPrice] = useState(item.price.toString());
-  const [available, setAvailable] = useState(item.available);
+  const [name, setName] = useState(item.name || '');
+  const [description, setDescription] = useState(item.description || '');
+  const [price, setPrice] = useState(item.price?.toString() || '0');
+  const [available, setAvailable] = useState(item.available ?? true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   
   // This state will hold the image URL for the uploader
@@ -30,10 +30,10 @@ const MenuItemForm: React.FC<MenuItemFormProps> = ({
   // Reset form when item changes
   useEffect(() => {
     console.log('MenuItemForm: Item changed, resetting form:', item);
-    setName(item.name);
-    setDescription(item.description);
-    setPrice(item.price.toString());
-    setAvailable(item.available);
+    setName(item.name || '');
+    setDescription(item.description || '');
+    setPrice(item.price?.toString() || '0');
+    setAvailable(item.available ?? true);
     setImageFile(null);
     setImageUrl(item.imageUrl || null);
   }, [item]);

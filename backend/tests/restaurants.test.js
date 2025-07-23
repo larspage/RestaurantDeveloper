@@ -1,6 +1,6 @@
 const request = require('supertest');
 const app = require('../app');
-const { createTestUser, getAuthToken } = require('./testUtils');
+const { createTestUser, getAuthToken, clearTestDB } = require('./testUtils');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 
@@ -10,18 +10,21 @@ describe('Restaurant API Endpoints', () => {
   let testRestaurant;
 
   beforeEach(async () => {
-    // Create test users for each test
+    // Clear database before each test to avoid duplicate key errors
+    await clearTestDB();
+    
+    // Create test users for each test with unique IDs
     testOwner = await User.create({
-      supabase_id: 'test-owner-123',
-      email: 'owner@test.com',
-      name: 'Test Owner',
+      supabase_id: `test-restaurant-owner-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: 'restaurant-owner@test.com',
+      name: 'Test Restaurant Owner',
       role: 'restaurant_owner'
     });
 
     testCustomer = await User.create({
-      supabase_id: 'test-customer-123',
-      email: 'customer@test.com',
-      name: 'Test Customer',
+      supabase_id: `test-restaurant-customer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: 'restaurant-customer@test.com',
+      name: 'Test Restaurant Customer',
       role: 'customer'
     });
 
@@ -31,6 +34,11 @@ describe('Restaurant API Endpoints', () => {
       description: 'A test restaurant',
       owner: testOwner._id
     });
+  });
+
+  afterEach(async () => {
+    // Clean up after each test
+    await clearTestDB();
   });
 
   describe('POST /restaurants', () => {

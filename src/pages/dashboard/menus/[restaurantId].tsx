@@ -8,9 +8,10 @@ import menuService, { Menu, MenuSection, MenuItem, MenuItemInput, MenuSectionInp
 import MenuSectionList from '../../../components/MenuSectionList';
 import DeleteConfirmationModal from '../../../components/DeleteConfirmationModal';
 import MenuItemForm from '../../../components/MenuItemForm';
+import MenuItemModal from '../../../components/MenuItemModal';
 import ImportPreview from '../../../components/ImportPreview';
 import { parseCsvToMenuItems, downloadCsvTemplate, CsvParseResult } from '../../../utils/csvParser';
-import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
 
 const MenuManagement = () => {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -30,6 +31,9 @@ const MenuManagement = () => {
   const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [modalItem, setModalItem] = useState<MenuItem | null>(null);
+  const [modalSectionId, setModalSectionId] = useState<string | null>(null);
   
   // Delete confirmation modal state
   const [deleteModal, setDeleteModal] = useState({
@@ -167,9 +171,13 @@ const MenuManagement = () => {
     try {
       setIsLoading(true);
       
+      // Calculate the next displayOrder value for the new section
+      const maxDisplayOrder = menu?.sections.reduce((max, section) => Math.max(max, section.displayOrder || 0), 0) || 0;
+      
       const newSection: MenuSectionInput = {
         name: sectionName,
         description: '',
+        displayOrder: maxDisplayOrder + 1,
         items: []
       };
       
@@ -313,44 +321,246 @@ const MenuManagement = () => {
     }
   };
 
-  const handleAddItem = async (sectionId: string) => {
-    if (!restaurantId || !sectionId) return;
+  const handleAddItem = (sectionId: string) => {
+    // Calculate the next order value for the new item
+    const section = menu?.sections.find(s => s._id === sectionId);
+    const maxOrder = section?.items.reduce((max, item) => Math.max(max, item.order || 0), 0) || 0;
+    
+    // Create a new item template with the next order value
+    const newItemTemplate: Partial<MenuItem> = {
+      name: '',
+      description: '',
+      price: 0,
+      available: true,
+      order: maxOrder + 1
+    };
+    
+    setModalItem(newItemTemplate as MenuItem); // Pass template as new item
+    setModalSectionId(sectionId);
+    setShowItemModal(true);
+  };
+
+  const handleEditItemModal = (item: MenuItem, sectionId: string) => {
+    setModalItem(item);
+    setModalSectionId(sectionId);
+    setShowItemModal(true);
+  };
+
+  const handleCloseItemModal = () => {
+    setShowItemModal(false);
+    setModalItem(null);
+    setModalSectionId(null);
+  };
+
+  const handleSaveItem = async (updatedItem: Partial<MenuItemInput>) => {
+    if (!restaurantId || !modalSectionId) return;
     
     try {
       setIsLoading(true);
       
-      const newItem = {
-        name: 'New Item',
-        description: 'Item description',
-        price: 0,
-        category: '',
-        available: true
-      };
-      
-      const result = await menuService.addOrUpdateItem(restaurantId as string, sectionId, newItem);
-      
-      // Update local state with the new item
-      const updatedMenu = {
-        ...menu!,
-        sections: menu!.sections.map(section => {
-          if (section._id === sectionId) {
-            return {
-              ...section,
-              items: [...section.items, result]
-            };
+      // Handle image upload if there's an image file
+      if (updatedItem.imageFile) {
+        setUploadingItemId(modalItem?._id || 'new');
+        
+        // Set upload progress to 0
+        setUploadProgress(0);
+        
+        // For new items without _id, use a temporary ID for upload
+        const itemIdForUpload = modalItem?._id || `temp-${Date.now()}`;
+        
+        // Upload the image and get the URL
+        const imageUrl = await menuService.uploadItemImage(
+          restaurantId as string,
+          modalSectionId,
+          itemIdForUpload,
+          updatedItem.imageFile,
+          (progress) => {
+            // Update progress state
+            setUploadProgress(progress);
           }
-          return section;
-        })
-      };
+        );
+        
+        // Add the imageUrl to the updated item
+        updatedItem.imageUrl = imageUrl;
+        
+        // Remove the file from the update payload
+        delete updatedItem.imageFile;
+        setUploadingItemId(null);
+      }
+
+      // If editing existing item, include the ID
+      if (modalItem?._id) {
+        updatedItem._id = modalItem._id;
+      }
       
+      const result = await menuService.addOrUpdateItem(restaurantId as string, modalSectionId, updatedItem);
+      
+      // Refresh the menu data to get the latest state
+      const updatedMenu = await menuService.getRestaurantMenu(restaurantId as string);
       setMenu(updatedMenu);
       setError(null);
       
-      // Automatically start editing the new item
-      setEditingItem(result);
+      // Close the modal
+      handleCloseItemModal();
     } catch (err) {
-      console.error('Failed to add item:', err);
-      setError('Failed to add menu item. Please try again.');
+      console.error('Failed to save item:', err);
+      setError('Failed to save menu item. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMoveItemUp = async (sectionId: string, itemId: string) => {
+    if (!restaurantId || !menu) return;
+    
+    try {
+      setIsLoading(true);
+      
+      const section = menu.sections.find(s => s._id === sectionId);
+      if (!section) return;
+      
+      const sortedItems = [...section.items].sort((a, b) => (a.order || 0) - (b.order || 0));
+      const itemIndex = sortedItems.findIndex(item => item._id === itemId);
+      
+      if (itemIndex <= 0) return; // Already at top
+      
+      // Swap order values with the item above
+      const currentItem = sortedItems[itemIndex];
+      const itemAbove = sortedItems[itemIndex - 1];
+      
+      const tempOrder = currentItem.order || 0;
+      currentItem.order = itemAbove.order || 0;
+      itemAbove.order = tempOrder;
+      
+      // Update both items
+      await menuService.addOrUpdateItem(restaurantId as string, sectionId, currentItem);
+      await menuService.addOrUpdateItem(restaurantId as string, sectionId, itemAbove);
+      
+      // Refresh menu
+      const updatedMenu = await menuService.getRestaurantMenu(restaurantId as string);
+      setMenu(updatedMenu);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to move item up:', err);
+      setError('Failed to reorder menu item. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMoveItemDown = async (sectionId: string, itemId: string) => {
+    if (!restaurantId || !menu) return;
+    
+    try {
+      setIsLoading(true);
+      
+      const section = menu.sections.find(s => s._id === sectionId);
+      if (!section) return;
+      
+      const sortedItems = [...section.items].sort((a, b) => (a.order || 0) - (b.order || 0));
+      const itemIndex = sortedItems.findIndex(item => item._id === itemId);
+      
+      if (itemIndex >= sortedItems.length - 1) return; // Already at bottom
+      
+      // Swap order values with the item below
+      const currentItem = sortedItems[itemIndex];
+      const itemBelow = sortedItems[itemIndex + 1];
+      
+      const tempOrder = currentItem.order || 0;
+      currentItem.order = itemBelow.order || 0;
+      itemBelow.order = tempOrder;
+      
+      // Update both items
+      await menuService.addOrUpdateItem(restaurantId as string, sectionId, currentItem);
+      await menuService.addOrUpdateItem(restaurantId as string, sectionId, itemBelow);
+      
+      // Refresh menu
+      const updatedMenu = await menuService.getRestaurantMenu(restaurantId as string);
+      setMenu(updatedMenu);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to move item down:', err);
+      setError('Failed to reorder menu item. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMoveSectionUp = async (sectionId: string) => {
+    if (!restaurantId || !menu) return;
+    
+    try {
+      setIsLoading(true);
+      
+      const sortedSections = [...menu.sections].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      const sectionIndex = sortedSections.findIndex(section => section._id === sectionId);
+      
+      console.log('Moving section up:', { sectionId, sectionIndex, sortedSections: sortedSections.map(s => ({ id: s._id, name: s.name, displayOrder: s.displayOrder })) });
+      
+      if (sectionIndex <= 0) {
+        console.log('Section already at top, cannot move up');
+        return; // Already at top
+      }
+      
+      // Swap displayOrder values with the section above
+      const currentSection = sortedSections[sectionIndex];
+      const sectionAbove = sortedSections[sectionIndex - 1];
+      
+      const tempOrder = currentSection.displayOrder || 0;
+      currentSection.displayOrder = sectionAbove.displayOrder || 0;
+      sectionAbove.displayOrder = tempOrder;
+      
+      // Update both sections
+      await menuService.addOrUpdateSection(restaurantId as string, currentSection);
+      await menuService.addOrUpdateSection(restaurantId as string, sectionAbove);
+      
+      // Refresh menu
+      const updatedMenu = await menuService.getRestaurantMenu(restaurantId as string);
+      setMenu(updatedMenu);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to move section up:', err);
+      setError('Failed to reorder menu section. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMoveSectionDown = async (sectionId: string) => {
+    if (!restaurantId || !menu) return;
+    
+    try {
+      setIsLoading(true);
+      
+      const sortedSections = [...menu.sections].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      const sectionIndex = sortedSections.findIndex(section => section._id === sectionId);
+      
+      console.log('Moving section down:', { sectionId, sectionIndex, sortedSections: sortedSections.map(s => ({ id: s._id, name: s.name, displayOrder: s.displayOrder })) });
+      
+      if (sectionIndex >= sortedSections.length - 1) {
+        console.log('Section already at bottom, cannot move down');
+        return; // Already at bottom
+      }
+      
+      // Swap displayOrder values with the section below
+      const currentSection = sortedSections[sectionIndex];
+      const sectionBelow = sortedSections[sectionIndex + 1];
+      
+      const tempOrder = currentSection.displayOrder || 0;
+      currentSection.displayOrder = sectionBelow.displayOrder || 0;
+      sectionBelow.displayOrder = tempOrder;
+      
+      // Update both sections
+      await menuService.addOrUpdateSection(restaurantId as string, currentSection);
+      await menuService.addOrUpdateSection(restaurantId as string, sectionBelow);
+      
+      // Refresh menu
+      const updatedMenu = await menuService.getRestaurantMenu(restaurantId as string);
+      setMenu(updatedMenu);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to move section down:', err);
+      setError('Failed to reorder menu section. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -394,28 +604,9 @@ const MenuManagement = () => {
         ...updatedItem
       });
       
-      // Check if we got a full menu object or just the updated item
-      if ('sections' in result) {
-        // If we got a full menu back, use it
-        setMenu(result as unknown as Menu);
-      } else {
-        // Update local state with the returned item
-        const updatedMenu = {
-          ...menu!,
-          sections: menu!.sections.map(section => {
-            if (section._id === sectionId) {
-              return {
-                ...section,
-                items: section.items.map(item => 
-                  item._id === itemId ? { ...item, ...result } : item
-                )
-              };
-            }
-            return section;
-          })
-        };
-        setMenu(updatedMenu);
-      }
+      // Refresh the menu data to get the latest state
+      const updatedMenu = await menuService.getRestaurantMenu(restaurantId as string);
+      setMenu(updatedMenu);
       setError(null);
       
       // Close the edit form if it was open
@@ -811,7 +1002,9 @@ const MenuManagement = () => {
   };
 
   const handleEditItem = (sectionId: string, item: MenuItem) => {
-    setEditingItem(item);
+    setModalItem(item);
+    setModalSectionId(sectionId);
+    setShowItemModal(true);
   };
 
   const handleCancelEdit = () => {
@@ -969,6 +1162,8 @@ const MenuManagement = () => {
                 onDeleteSection={handleOpenDeleteModal}
                 activeSection={activeSection}
                 onEditDescription={handleEditSectionDescription}
+                onMoveSectionUp={handleMoveSectionUp}
+                onMoveSectionDown={handleMoveSectionDown}
                 data-cy="menu-section-list"
               />
             </div>
@@ -998,7 +1193,8 @@ const MenuManagement = () => {
                     <div className="space-y-4" data-cy="menu-item-list">
                       {menu.sections
                         .find(s => s._id === activeSection)
-                        ?.items.map(item => (
+                        ?.items.sort((a, b) => (a.order || 0) - (b.order || 0))
+                        .map(item => (
                           <div key={item._id} className="border border-gray-200 rounded-lg p-4" data-cy={`menu-item-${item._id}`}>
                             {editingItem && editingItem._id === item._id ? (
                               <MenuItemForm
@@ -1014,7 +1210,31 @@ const MenuManagement = () => {
                                   <div>
                                     <h3 className="font-medium text-lg">{item.name}</h3>
                                     <p className="text-gray-600 text-sm">{item.description}</p>
-                                    <p className="text-gray-800 font-medium mt-1">${item.price.toFixed(2)}</p>
+                                    
+                                    {/* Display price points if available, otherwise show single price */}
+                                    {item.pricePoints && item.pricePoints.length > 0 ? (
+                                      <div className="mt-1">
+                                        <div className="flex flex-wrap gap-2">
+                                          {item.pricePoints.map((pricePoint, index) => (
+                                            <span
+                                              key={pricePoint.id}
+                                              className={`inline-flex items-center px-2 py-1 text-xs rounded-full font-medium ${
+                                                pricePoint.isDefault 
+                                                  ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                                                  : 'bg-gray-100 text-gray-700 border border-gray-200'
+                                              }`}
+                                            >
+                                              {pricePoint.name}: ${pricePoint.price.toFixed(2)}
+                                              {pricePoint.isDefault && (
+                                                <span className="ml-1 text-xs font-semibold">(default)</span>
+                                              )}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <p className="text-gray-800 font-medium mt-1">${(item.price || 0).toFixed(2)}</p>
+                                    )}
                                     
                                     {/* Availability indicator */}
                                     <div className="mt-2 flex items-center">
@@ -1058,6 +1278,29 @@ const MenuManagement = () => {
                                 </div>
 
                                 <div className="flex space-x-2 ml-4">
+                                  {/* Reorder buttons */}
+                                  <div className="flex flex-col space-y-1">
+                                    <button
+                                      onClick={() => handleMoveItemUp(activeSection!, item._id!)}
+                                      className="text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title="Move up"
+                                      disabled={menu.sections.find(s => s._id === activeSection)?.items.sort((a, b) => (a.order || 0) - (b.order || 0))[0]._id === item._id}
+                                    >
+                                      <ChevronUpIcon className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleMoveItemDown(activeSection!, item._id!)}
+                                      className="text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title="Move down"
+                                      disabled={(() => {
+                                        const sortedItems = menu.sections.find(s => s._id === activeSection)?.items.sort((a, b) => (a.order || 0) - (b.order || 0)) || [];
+                                        return sortedItems[sortedItems.length - 1]?._id === item._id;
+                                      })()}
+                                    >
+                                      <ChevronDownIcon className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                  
                                   <button
                                     onClick={() => handleImageUpload(activeSection, item._id!)}
                                     className="text-blue-600 hover:text-blue-800"
@@ -1069,7 +1312,7 @@ const MenuManagement = () => {
                                     </svg>
                                   </button>
                                   <button
-                                    onClick={() => handleEditItem(activeSection, item)}
+                                    onClick={() => handleEditItem(activeSection!, item)}
                                     className="text-blue-600 hover:text-blue-800"
                                     title="Edit item"
                                     data-cy="edit-item-button"
@@ -1258,6 +1501,15 @@ const MenuManagement = () => {
           itemCount={deleteModal.itemCount}
           onClose={handleCloseDeleteModal}
           onConfirm={handleConfirmDeleteSection}
+        />
+
+        <MenuItemModal
+          isOpen={showItemModal}
+          item={modalItem}
+          onSave={handleSaveItem}
+          onCancel={handleCloseItemModal}
+          isUploading={uploadingItemId !== null}
+          uploadProgress={uploadProgress}
         />
       </div>
     </Layout>

@@ -19,6 +19,7 @@ export interface MenuItem {
   modifications?: string[];
   image?: string;
   imageUrl?: string;
+  order?: number; // For sorting items within a section
 }
 
 // Interface for creating/updating menu items (optional _id)
@@ -36,6 +37,7 @@ export interface MenuItemInput {
   imageUrl?: string;
   imageFile?: File;
   imageUploadProgress?: number;
+  order?: number; // For sorting items within a section
 }
 
 export interface MenuSection {

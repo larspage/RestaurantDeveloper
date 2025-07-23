@@ -3,7 +3,7 @@ const app = require('../app');
 const Restaurant = require('../models/Restaurant');
 const Order = require('../models/Order');
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+const { getAuthToken, clearTestDB } = require('./testUtils');
 
 describe('Printer Routes', () => {
   let authToken;
@@ -11,17 +11,21 @@ describe('Printer Routes', () => {
   let restaurantId;
   let orderId;
   let printerId;
+  let testUser;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
+    // Clear database before each test to avoid conflicts
+    await clearTestDB();
+    
     // Create test user with valid role and required fields
-    const user = await User.create({
-      supabase_id: 'test-printer-user-123',
-      name: 'Test User',
-      email: 'test@example.com',
+    testUser = await User.create({
+      supabase_id: `test-printer-user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: 'Test Printer User',
+      email: 'printer-test@example.com',
       role: 'restaurant_owner'
     });
-    userId = user._id;
-    authToken = jwt.sign({ id: userId }, process.env.JWT_SECRET);
+    userId = testUser._id;
+    authToken = await getAuthToken(testUser);
 
     // Create test restaurant
     const restaurant = await Restaurant.create({
@@ -50,11 +54,9 @@ describe('Printer Routes', () => {
     orderId = order._id;
   });
 
-  afterAll(async () => {
-    // Clean up test data
-    await User.deleteMany({});
-    await Restaurant.deleteMany({});
-    await Order.deleteMany({});
+  afterEach(async () => {
+    // Clean up after each test
+    await clearTestDB();
   });
 
   describe('GET /printers/restaurants/:id/printers', () => {

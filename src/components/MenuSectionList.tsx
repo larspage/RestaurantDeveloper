@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
 import { MenuSection } from '../services/menuService';
 
 // Type for the draggable section item
@@ -12,6 +13,9 @@ type DraggableSectionProps = {
   onDeleteSection: (sectionId: string) => void;
   activeSection: string | null;
   onEditDescription: (sectionId: string, description: string) => void;
+  onMoveSectionUp?: (sectionId: string) => void;
+  onMoveSectionDown?: (sectionId: string) => void;
+  totalSections: number;
   'data-cy'?: string;
 };
 
@@ -23,6 +27,8 @@ type MenuSectionListProps = {
   onDeleteSection: (sectionId: string) => void;
   activeSection: string | null;
   onEditDescription: (sectionId: string, description: string) => void;
+  onMoveSectionUp?: (sectionId: string) => void;
+  onMoveSectionDown?: (sectionId: string) => void;
   'data-cy'?: string;
 };
 
@@ -42,6 +48,9 @@ const DraggableSection: React.FC<DraggableSectionProps> = ({
   onDeleteSection,
   activeSection,
   onEditDescription,
+  onMoveSectionUp,
+  onMoveSectionDown,
+  totalSections,
   'data-cy': dataCy
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -155,6 +164,41 @@ const DraggableSection: React.FC<DraggableSectionProps> = ({
           <span>{section.name}</span>
         </button>
         <div className="flex items-center">
+          {/* Reorder buttons */}
+          {(onMoveSectionUp || onMoveSectionDown) && (
+            <div 
+              className="flex flex-col mr-2"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Up arrow clicked for section:', section.name, section._id);
+                  onMoveSectionUp?.(section._id!);
+                }}
+                className="text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Move section up"
+                disabled={index === 0}
+              >
+                <ChevronUpIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Down arrow clicked for section:', section.name, section._id);
+                  onMoveSectionDown?.(section._id!);
+                }}
+                className="text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Move section down"
+                disabled={index === totalSections - 1}
+              >
+                <ChevronDownIcon className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          
           <button
             onClick={handleEditClick}
             className="ml-2 text-blue-600 hover:text-blue-800"
@@ -220,6 +264,8 @@ const MenuSectionList: React.FC<MenuSectionListProps> = ({
   onDeleteSection,
   activeSection,
   onEditDescription,
+  onMoveSectionUp,
+  onMoveSectionDown,
   'data-cy': dataCy
 }) => {
   const [sectionList, setSectionList] = useState<MenuSection[]>(sections);
@@ -228,6 +274,15 @@ const MenuSectionList: React.FC<MenuSectionListProps> = ({
   useEffect(() => {
     setSectionList(sections);
   }, [sections]);
+  
+  // Debug: Check if reorder functions are provided
+  useEffect(() => {
+    console.log('MenuSectionList props:', {
+      onMoveSectionUp: typeof onMoveSectionUp,
+      onMoveSectionDown: typeof onMoveSectionDown,
+      sectionsCount: sections.length
+    });
+  }, [onMoveSectionUp, onMoveSectionDown, sections.length]);
   
   // Handle moving a section
   const moveSection = useCallback(
@@ -269,6 +324,9 @@ const MenuSectionList: React.FC<MenuSectionListProps> = ({
                 onDeleteSection={onDeleteSection}
                 activeSection={activeSection}
                 onEditDescription={onEditDescription}
+                onMoveSectionUp={onMoveSectionUp}
+                onMoveSectionDown={onMoveSectionDown}
+                totalSections={sectionList.length}
               />
             ))}
           </ul>

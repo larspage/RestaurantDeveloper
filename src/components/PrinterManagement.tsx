@@ -6,7 +6,7 @@ import {
   UpdatePrinterData, 
   printerService 
 } from '../services/printerService';
-import { NotificationToast } from './NotificationToast';
+import NotificationToast from './NotificationToast';
 
 interface PrinterManagementProps {
   restaurantId: string;

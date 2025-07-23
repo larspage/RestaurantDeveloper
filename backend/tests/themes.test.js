@@ -11,7 +11,7 @@ describe('Theme API Endpoints', () => {
   let testTheme;
 
   beforeEach(async () => {
-    // Clear any existing themes before each test
+    // Clear only themes before each test to avoid conflicts
     await Theme.deleteMany({});
     
     // Create a test theme for each test
@@ -40,6 +40,11 @@ describe('Theme API Endpoints', () => {
       customizable: true,
       version: '1.0.0'
     });
+  });
+
+  afterEach(async () => {
+    // Clean up themes after each test
+    await Theme.deleteMany({});
   });
 
   describe('GET /themes', () => {

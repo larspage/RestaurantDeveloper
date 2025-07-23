@@ -1,6 +1,6 @@
 const request = require('supertest');
 const app = require('../app');
-const { getAuthToken } = require('./testUtils');
+const { getAuthToken, clearTestDB } = require('./testUtils');
 const Order = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
@@ -14,19 +14,22 @@ describe('Order API Endpoints', () => {
   let testOwner;
 
   beforeEach(async () => {
-    // Create test owner
+    // Clear database before each test to avoid duplicate key errors
+    await clearTestDB();
+    
+    // Create test owner with unique ID
     testOwner = await User.create({
-      supabase_id: 'test-owner-123',
-      email: 'owner@test.com',
-      name: 'Test Owner',
+      supabase_id: `test-order-owner-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: 'order-owner@test.com',
+      name: 'Test Order Owner',
       role: 'restaurant_owner'
     });
 
-    // Create test customer
+    // Create test customer with unique ID
     customer = await User.create({
-      supabase_id: 'test-customer-123',
-      email: 'customer@test.com',
-      name: 'Test Customer',
+      supabase_id: `test-order-customer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: 'order-customer@test.com',
+      name: 'Test Order Customer',
       role: 'customer'
     });
 
@@ -72,6 +75,11 @@ describe('Order API Endpoints', () => {
     });
 
     customerToken = await getAuthToken(customer);
+  });
+
+  afterEach(async () => {
+    // Clean up after each test
+    await clearTestDB();
   });
 
   describe('POST /orders/new', () => {

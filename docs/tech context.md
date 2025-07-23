@@ -53,6 +53,14 @@ Mr. Brooks Restaurant Creator is powered by a **hybrid architecture**, utilizing
 - **Structured JSON logging** for analysis and troubleshooting.
 - **Development mode support** with enhanced debugging capabilities.
 
+### **9. MCP Server Integration (AI-Assisted Development)**
+- **MongoDB MCP Server** for direct database integration and mindmap functionality.
+- **Supabase MCP Server** for authentication and user management integration.
+- **Puppeteer MCP Server** for visual frontend testing and debugging capabilities.
+- **Enhanced development workflow** with AI-assisted visual debugging and testing.
+- **Real-time frontend inspection** for better UI/UX issue resolution.
+- **Screenshot-based debugging** for visual context in development discussions.
+
 ---
 
 ## System Interaction Flow
@@ -84,6 +92,14 @@ Mr. Brooks Restaurant Creator is powered by a **hybrid architecture**, utilizing
 6. **Business events** (orders, menu updates) are tracked for audit trails.
 7. **Log files rotate daily** and are automatically cleaned up after 7 days.
 
+### **MCP-Enhanced Development Flow**
+1. **Visual debugging** via Puppeteer MCP server for real-time frontend inspection.
+2. **Database integration** through MongoDB MCP server for direct data access and mindmap functionality.
+3. **Authentication integration** via Supabase MCP server for user management workflows.
+4. **Screenshot-based issue resolution** for better understanding of UI/UX problems.
+5. **AI-assisted development** with visual context for more accurate code changes.
+6. **Enhanced testing capabilities** combining traditional testing with visual verification.
+
 ---
 
 ## Future Enhancements
@@ -91,3 +107,5 @@ Mr. Brooks Restaurant Creator is powered by a **hybrid architecture**, utilizing
 - **POS System Integration** – Improve order tracking and ticket printing functionality.
 - **Expanded Theming Options** – Provide more restaurant-specific UI designs.
 - **Optimized Prep Time Logic** – Ensure efficient kitchen workflow and order sequencing.
+- **Advanced Visual Testing** – Expand Puppeteer integration for automated visual regression testing.
+- **Performance Monitoring** – Leverage MCP servers for real-time performance analysis and optimization.

@@ -182,6 +182,15 @@ router.delete('/:restaurant_id/sections/:section_id', authenticateToken, async (
 // Add or update menu item in a section (owner only)
 router.post('/:restaurant_id/sections/:section_id/items', authenticateToken, async (req, res) => {
   try {
+    console.log('=== ADD/UPDATE MENU ITEM DEBUG ===');
+    console.log('Method: POST /menus/:restaurant_id/sections/:section_id/items');
+    console.log('Parameters:', {
+      restaurant_id: req.params.restaurant_id,
+      section_id: req.params.section_id
+    });
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('User:', req.user?.id || 'No user');
+    
     // Special handling for development mode
     const isDevelopmentMode = process.env.NODE_ENV !== 'production';
     const isDevRestaurant = req.params.restaurant_id.startsWith('dev-');
@@ -192,9 +201,14 @@ router.post('/:restaurant_id/sections/:section_id/items', authenticateToken, asy
       // For development, just return a success response with mock data
       const item = req.body.item || req.body;
       
+      console.log('Development mode item data:', JSON.stringify(item, null, 2));
+      
       // If it's a new item, generate a mock ID
       if (!item._id) {
         item._id = `dev-item-${Date.now()}`;
+        console.log('Generated new item ID:', item._id);
+      } else {
+        console.log('Updating existing item with ID:', item._id);
       }
       
       // Return a mock response with the updated item
@@ -208,46 +222,94 @@ router.post('/:restaurant_id/sections/:section_id/items', authenticateToken, asy
     }
     
     // Regular production flow
+    console.log('Using production flow for menu item update');
+    
     // Check if restaurant exists and user is owner
+    console.log('Looking for restaurant with ID:', req.params.restaurant_id);
     const restaurant = await Restaurant.findById(req.params.restaurant_id);
     if (!restaurant) {
+      console.log('Restaurant not found');
       return res.status(404).json({ message: 'Restaurant not found' });
     }
+    console.log('Restaurant found:', restaurant.name);
+    
     if (restaurant.owner.toString() !== req.user.id) {
+      console.log('Owner mismatch. Restaurant owner:', restaurant.owner.toString(), 'User ID:', req.user.id);
       return res.status(403).json({ message: 'Only the restaurant owner can modify menu items' });
     }
+    console.log('Owner verification passed');
 
     const { item } = req.body;
-    if (!item || !item.name || !item.price) {
+    console.log('Extracted item from request body:', JSON.stringify(item, null, 2));
+    
+    if (!item || !item.name || item.price === null || item.price === undefined) {
+      console.log('Validation failed. Item:', !!item, 'Name:', !!item?.name, 'Price:', item?.price);
       return res.status(400).json({ message: 'Item name and price are required' });
     }
+    console.log('Item validation passed');
 
+    console.log('Looking for menu for restaurant:', req.params.restaurant_id);
     const menu = await Menu.findOne({ restaurant: req.params.restaurant_id });
     if (!menu) {
+      console.log('Menu not found');
       return res.status(404).json({ message: 'Menu not found' });
     }
+    console.log('Menu found with', menu.sections.length, 'sections');
 
+    console.log('Looking for section with ID:', req.params.section_id);
     const section = menu.sections.find(s => s._id.toString() === req.params.section_id);
     if (!section) {
+      console.log('Section not found. Available sections:', menu.sections.map(s => ({ id: s._id.toString(), name: s.name })));
       return res.status(404).json({ message: 'Section not found' });
     }
+    console.log('Section found:', section.name, 'with', section.items.length, 'items');
 
     // If item has _id, update existing item, otherwise add new item
     if (item._id) {
-      const itemIndex = section.items.findIndex(i => i._id.toString() === item._id);
+      console.log('Updating existing item with ID:', item._id);
+      console.log('ID type:', typeof item._id);
+      console.log('Available item IDs in section:', section.items.map(i => ({ id: i._id.toString(), type: typeof i._id })));
+      
+      const itemIndex = section.items.findIndex(i => i._id.toString() === item._id.toString());
       if (itemIndex === -1) {
+        console.log('Item not found in section. Looking for ID:', item._id.toString());
+        console.log('Comparison details:');
+        section.items.forEach((sectionItem, idx) => {
+          console.log(`  Item ${idx}: ${sectionItem._id.toString()} === ${item._id.toString()} ? ${sectionItem._id.toString() === item._id.toString()}`);
+        });
         return res.status(404).json({ message: 'Item not found' });
       }
+      console.log('Found item at index:', itemIndex);
       section.items[itemIndex] = { ...section.items[itemIndex].toObject(), ...item };
+      console.log('Item updated');
     } else {
+      console.log('Adding new item to section');
       section.items.push(item);
+      console.log('New item added');
     }
 
     await menu.save();
+    console.log('Menu saved successfully');
     res.json(menu);
   } catch (error) {
-    console.error('Error managing menu item:', error);
-    res.status(500).json({ message: 'Error managing menu item', error: error.message });
+    console.error('=== ERROR IN ADD/UPDATE MENU ITEM ===');
+    console.error('Method: POST /menus/:restaurant_id/sections/:section_id/items');
+    console.error('Parameters:', {
+      restaurant_id: req.params.restaurant_id,
+      section_id: req.params.section_id
+    });
+    console.error('Request body:', JSON.stringify(req.body, null, 2));
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
+    console.error('Full error object:', error);
+    console.error('=== END ERROR DEBUG ===');
+    
+    res.status(500).json({ 
+      message: 'Error managing menu item', 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

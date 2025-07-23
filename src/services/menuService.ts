@@ -62,7 +62,7 @@ const menuService = {
     }
     
     try {
-      const response = await api.post(`/menus/${restaurantId}/sections`, sectionData);
+      const response = await api.post(`/menus/${restaurantId}/sections`, { section: sectionData });
       return response.data;
     } catch (error) {
       console.error('Error adding/updating section:', error);
@@ -133,19 +133,37 @@ const menuService = {
         return response.data.item;
       }
       
-      // Handle regular response format
-      // Find the updated item in the returned menu
+      // Handle regular response format - backend returns full menu
       if (response.data && response.data.sections) {
         const section = response.data.sections.find((s: any) => s._id === sectionId);
-        if (section) {
-          const updatedItem = section.items.find((i: any) => i._id === itemData._id);
-          if (updatedItem) {
-            return updatedItem;
+        if (section && section.items) {
+          // If updating an existing item, find it by ID
+          if (itemData._id) {
+            const updatedItem = section.items.find((i: any) => i._id.toString() === itemData._id?.toString());
+            if (updatedItem) {
+              return updatedItem;
+            }
+          }
+          
+          // If adding a new item, find the most recently added item (last in the array)
+          // or find by matching name and price as fallback
+          const lastItem = section.items[section.items.length - 1];
+          if (lastItem && lastItem.name === itemData.name && lastItem.price === itemData.price) {
+            return lastItem;
+          }
+          
+          // Fallback: try to find by name and description
+          const matchingItem = section.items.find((i: any) => 
+            i.name === itemData.name && i.description === itemData.description
+          );
+          if (matchingItem) {
+            return matchingItem;
           }
         }
       }
       
-      return response.data;
+      // If we can't extract the item properly, throw an error
+      throw new Error('Failed to extract updated item from response');
     } catch (error) {
       console.error('Error adding/updating item:', error);
       throw error;

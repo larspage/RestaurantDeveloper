@@ -23,7 +23,7 @@ const BulkOrderActions: React.FC<BulkOrderActionsProps> = ({
 
     // Find common actions available for all selected orders
     const allStatuses = selectedOrders.map(order => order.status as OrderStatus);
-    const uniqueStatuses = [...new Set(allStatuses)];
+    const uniqueStatuses = Array.from(new Set(allStatuses));
 
     const actions: { status: OrderStatus; label: string; color: string }[] = [];
 

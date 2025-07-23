@@ -4,14 +4,7 @@ const { setupTestDB, closeTestDB, clearTestDB } = require('./testUtils');
 const { createMockToken } = require('./testAuthHelper');
 const User = require('../models/User');
 
-// Mock Supabase functions
-jest.mock('../db/supabase', () => ({
-  verifyToken: jest.fn(),
-  createUser: jest.fn(),
-  signInWithPassword: jest.fn()
-}));
-
-// Get the mocked functions
+// Get the mocked functions from testMocks.js
 const { verifyToken, createUser, signInWithPassword } = require('../db/supabase');
 
 describe('Authentication Endpoints', () => {
@@ -163,15 +156,6 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should login user successfully', async () => {
-      // Mock Supabase login success
-      signInWithPassword.mockResolvedValue({
-        user: {
-          id: 'test-user-123',
-          email: 'test@example.com'
-        },
-        token: 'mock-jwt-token'
-      });
-
       const response = await request(app)
         .post('/auth/login')
         .send({
@@ -181,7 +165,7 @@ describe('Authentication Endpoints', () => {
         .expect(200);
 
       expect(response.body.message).toBe('Login successful');
-      expect(response.body.token).toBe('mock-jwt-token');
+      expect(response.body.token).toBe('mock.jwt.token.test-user-123');
       expect(response.body.user.user_id).toBe('test-user-123');
       expect(response.body.user.name).toBe('Test User');
       expect(response.body.user.email).toBe('test@example.com'); // Email returned from MongoDB
@@ -200,15 +184,6 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should return error when user profile not found in MongoDB', async () => {
-      // Mock Supabase login success but user not in MongoDB
-      signInWithPassword.mockResolvedValue({
-        user: {
-          id: 'non-existent-user-123',
-          email: 'nonexistent@example.com'
-        },
-        token: 'mock-jwt-token'
-      });
-
       const response = await request(app)
         .post('/auth/login')
         .send({
