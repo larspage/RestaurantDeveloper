@@ -15,6 +15,24 @@ router.post('/new', optionalAuthenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Restaurant not found' });
     }
 
+    // Validate items array
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Items array is required and must not be empty' });
+    }
+
+    // Validate each item
+    for (const item of items) {
+      if (!item.name || typeof item.name !== 'string' || item.name.trim().length < 2) {
+        return res.status(400).json({ message: 'Each item must have a name with at least 2 characters' });
+      }
+      if (typeof item.price !== 'number' || item.price === 0) {
+        return res.status(400).json({ message: 'Each item must have a valid price (non-zero number)' });
+      }
+      if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+        return res.status(400).json({ message: 'Each item must have a quantity of at least 1' });
+      }
+    }
+
     // Calculate total price
     const total_price = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
@@ -39,7 +57,9 @@ router.post('/new', optionalAuthenticateToken, async (req, res) => {
     const order = await Order.create(orderData);
     res.status(201).json(order);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating order', error: error.message });
+    // Log the actual error internally but don't expose to client
+    console.error('Error creating order:', error);
+    res.status(500).json({ message: 'Error creating order' });
   }
 });
 

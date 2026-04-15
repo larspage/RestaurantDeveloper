@@ -8,12 +8,19 @@ export interface ToastNotification {
   duration?: number;
 }
 
-interface NotificationToastProps {
+interface NotificationToastBatchProps {
   notifications: ToastNotification[];
   onRemove: (id: string) => void;
 }
 
-const NotificationToast: React.FC<NotificationToastProps> = ({ notifications, onRemove }) => {
+interface NotificationToastSimpleProps {
+  type: 'success' | 'error' | 'info' | 'warning';
+  message: string;
+  title?: string;
+  onClose: () => void;
+}
+
+const NotificationToastBatch: React.FC<NotificationToastBatchProps> = ({ notifications, onRemove }) => {
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       {notifications.map((notification) => (
@@ -25,6 +32,31 @@ const NotificationToast: React.FC<NotificationToastProps> = ({ notifications, on
       ))}
     </div>
   );
+};
+
+// Simple single notification component
+const NotificationToastSimple: React.FC<NotificationToastSimpleProps> = ({ type, message, title, onClose }) => {
+  const notification: ToastNotification = {
+    id: 'simple-' + Date.now(),
+    type,
+    title: title || (type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Info'),
+    message,
+    duration: 4000
+  };
+
+  return (
+    <div className="fixed top-4 right-4 z-50 space-y-2">
+      <ToastItem notification={notification} onRemove={() => onClose()} />
+    </div>
+  );
+};
+
+// Main component that handles both usage patterns
+const NotificationToast: React.FC<NotificationToastBatchProps | NotificationToastSimpleProps> = (props) => {
+  if ('notifications' in props) {
+    return <NotificationToastBatch {...props} />;
+  }
+  return <NotificationToastSimple {...props} />;
 };
 
 interface ToastItemProps {

@@ -28,9 +28,16 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await authService.login(formData);
-      router.push(returnUrl ? returnUrl.toString() : '/dashboard');
+      console.log('Attempting login with:', formData.email);
+      const result = await authService.login(formData);
+      console.log('Login successful, result:', result);
+      
+      // Use hard navigation to ensure redirect works
+      const targetUrl = returnUrl ? returnUrl.toString() : '/dashboard';
+      console.log('Redirecting to:', targetUrl);
+      window.location.href = targetUrl;
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
     } finally {
       setIsLoading(false);
